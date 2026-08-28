@@ -57,6 +57,16 @@ class LeadCreateResponse(BaseModel):
     status: str
 
 
+class LeadQualificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    score: int
+    temperature: str
+    summary: str
+    reasoning: str
+    recommended_action: str
+
+
 class LeadResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -70,3 +80,20 @@ class LeadResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    qualification: LeadQualificationResponse | None = None
+
+
+class LeadListResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    company: str
+    email: str
+    phone: str
+    business_problem: str
+    source: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    qualification: LeadQualificationResponse | None = None
