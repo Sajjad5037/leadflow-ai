@@ -163,7 +163,7 @@ def get_upcoming_followups(db: Session = Depends(get_db)):
         db.query(Followup)
         .filter(
             Followup.status == 'SCHEDULED',
-            Followup.scheduled_at > func.now(),
+            Followup.scheduled_at <= func.now(),
         )
         .order_by(Followup.scheduled_at.asc())
         .all()
