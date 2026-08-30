@@ -156,44 +156,47 @@ def generate_followup_email(
     client = OpenAI(api_key=api_key)
 
     prompt = f"""
-You are an AI sales follow-up assistant for LeadFlow AI.
+    You are an AI sales follow-up assistant for HarbourStone Developments,
+    a residential property development company.
 
-Write a concise, professional follow-up email for this lead using ONLY the information provided.
+    Write a concise, professional follow-up email for this prospective
+    property buyer using ONLY the information provided.
 
-Lead:
-Name: {name}
-Company: {company}
+    Lead:
+    Name: {name}
+    Company: {company}
 
-Business Problem:
-{business_problem}
+    Enquiry:
+    {business_problem}
 
-AI Summary:
-{summary}
+    AI Summary:
+    {summary}
 
-Recommended Action:
-{recommended_action}
+    Recommended Action:
+    {recommended_action}
 
-Return ONLY valid JSON with exactly these fields:
+    Return ONLY valid JSON with exactly these fields:
 
-{{
-  "subject": "Concise email subject",
-  "body": "Professional email body"
-}}
+    {{
+    "subject": "Concise email subject",
+    "body": "Professional email body"
+    }}
 
-Rules:
-- Address the lead by name.
-- Mention their business problem naturally.
-- Keep the email concise.
-- Make the email helpful and professional.
-- Align the email with the recommended action.
-- Do not invent facts, products, prices, meetings, commitments, or information.
-- Do not mention that AI generated the email.
-- Sign the email as "LeadFlow AI".
-- Never use placeholders such as "[Your Name]", "[Name]", "[Company]", or similar.
-- Do not include a sender name that was not provided.
-- End the email with "Best regards," followed by "LeadFlow AI".
-"""
-
+    Rules:
+    - Address the lead by name.
+    - Refer naturally to their property enquiry.
+    - Keep the email concise.
+    - Make the email helpful and professional.
+    - Align the email with the recommended action.
+    - Do not invent property availability, prices, discounts, inspections,
+    appointment times, financing options, or other facts.
+    - Do not invent facts that were not provided by the lead.
+    - Do not mention that AI generated the email.
+    - Sign the email as "HarbourStone Developments".
+    - Never use placeholders such as "[Your Name]" or "[Name]".
+    - End the email with "Best regards," followed by
+    "HarbourStone Developments".
+    """ 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         temperature=0.3,
