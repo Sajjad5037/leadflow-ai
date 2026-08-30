@@ -173,6 +173,20 @@ def get_upcoming_followups(db: Session = Depends(get_db)):
 
 @router.get('/followups/due', response_model=list[FollowupResponse])
 def get_due_followups(db: Session = Depends(get_db)):
+    current_time = db.query(func.now()).scalar()
+
+    print("=== DUE FOLLOWUPS DEBUG ===")
+    print(f"Database current time: {current_time}")
+
+    all_followups = db.query(Followup).order_by(Followup.id.asc()).all()
+
+    for followup in all_followups:
+        print(
+            f"Followup ID: {followup.id} | "
+            f"Status: {followup.status} | "
+            f"Scheduled at: {followup.scheduled_at}"
+        )
+
     followups = (
         db.query(Followup)
         .filter(
@@ -182,6 +196,17 @@ def get_due_followups(db: Session = Depends(get_db)):
         .order_by(Followup.scheduled_at.asc())
         .all()
     )
+
+    print(f"Due followups found: {len(followups)}")
+
+    for followup in followups:
+        print(
+            f"DUE -> ID: {followup.id} | "
+            f"Status: {followup.status} | "
+            f"Scheduled at: {followup.scheduled_at}"
+        )
+
+    print("=== END DEBUG ===")
 
     return followups
 @router.get('/followups/scheduled', response_model=list[FollowupResponse])
