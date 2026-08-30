@@ -4,7 +4,6 @@ import os
 
 import resend
 
-
 def send_email(
     *,
     to_email: str,
@@ -18,9 +17,11 @@ def send_email(
 
     resend.api_key = api_key
 
-    resend.Emails.send({
+    response = resend.Emails.send({
         'from': 'onboarding@resend.dev',
         'to': [to_email],
         'subject': subject,
         'text': body,
     })
+
+    print(f'Resend response: {response}')
