@@ -157,8 +157,8 @@ def get_leads(db: Session = Depends(get_db)):
     return results
     
 
-@router.get('/followups/upcoming', response_model=list[FollowupResponse])
-def get_upcoming_followups(db: Session = Depends(get_db)):
+@router.get('/followups/due', response_model=list[FollowupResponse])
+def get_due_followups(db: Session = Depends(get_db)):
     followups = (
         db.query(Followup)
         .filter(
