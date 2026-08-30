@@ -170,7 +170,7 @@ def get_upcoming_followups(db: Session = Depends(get_db)):
     )
 
     return followups
-@router.get('/followups/due', response_model=list[FollowupResponse])
+
 @router.get('/followups/due', response_model=list[FollowupResponse])
 def get_due_followups(db: Session = Depends(get_db)):
     followups = (
