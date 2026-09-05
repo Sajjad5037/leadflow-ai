@@ -22,6 +22,9 @@ def process_followup(followup: Followup, db: Session) -> Followup:
     if followup.status != 'SCHEDULED':
         raise ValueError('Only SCHEDULED follow-ups can be processed.')
 
+    if followup.scheduled_at > datetime.utcnow():
+        raise ValueError('Follow-up is not due yet.')
+
     lead = db.query(Lead).filter(Lead.id == followup.lead_id).first()
 
     if not lead:
