@@ -266,6 +266,321 @@ textarea {
   overflow-x: auto;
 }
 
+.admin-dashboard-shell {
+  min-width: 0;
+}
+
+.command-center-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.command-center-subtitle {
+  max-width: 62ch;
+  margin: 0.7rem 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.command-center-snapshot {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.command-center-overview {
+  margin-bottom: 2.2rem;
+}
+
+.command-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.command-kpi-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 138px;
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--input-bg);
+}
+
+.command-kpi-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--kpi-accent);
+}
+
+.command-kpi-card > span {
+  display: block;
+  min-height: 2.4em;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.command-kpi-card strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  line-height: 1.15;
+}
+
+.command-kpi-card small {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--kpi-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.command-kpi-blue {
+  --kpi-accent: #60a5fa;
+}
+
+.command-kpi-red {
+  --kpi-accent: #fb7185;
+}
+
+.command-kpi-amber {
+  --kpi-accent: #fbbf24;
+}
+
+.command-kpi-green {
+  --kpi-accent: #34d399;
+}
+
+.command-kpi-cyan {
+  --kpi-accent: #22d3ee;
+}
+
+.command-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.command-panel {
+  min-width: 0;
+  padding: 1.2rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.56);
+}
+
+.command-section-heading,
+.live-dashboard-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.command-section-heading > div > span,
+.live-dashboard-heading > div > span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.command-section-heading h3,
+.live-dashboard-heading h3 {
+  margin: 0.2rem 0 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.command-pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}
+
+.command-pipeline-stage {
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 10px;
+  background: rgba(9, 17, 32, 0.46);
+}
+
+.command-stage-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.command-stage-heading span {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.command-stage-heading strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.command-stage-track {
+  height: 4px;
+  margin-top: 0.8rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.command-stage-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-strong), var(--success));
+}
+
+.command-pipeline-stage small {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.command-team-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}
+
+.command-team-member {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.command-team-member:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.command-team-person {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.command-team-avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.command-team-person strong {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.command-team-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.65rem 0 0 2.55rem;
+}
+
+.command-team-metrics div {
+  min-width: 0;
+}
+
+.command-team-metrics dt {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-team-metrics dd {
+  margin: 0.12rem 0 0;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.live-dashboard-heading {
+  margin: 0 0 1.25rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+@media (max-width: 1000px) {
+  .command-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .command-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .command-center-header {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .command-center-snapshot {
+    justify-self: start;
+  }
+
+  .command-kpi-grid,
+  .command-pipeline-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .command-kpi-grid,
+  .command-pipeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .command-kpi-card {
+    min-height: 0;
+  }
+
+  .command-team-metrics {
+    margin-left: 0;
+  }
+
+  .command-section-heading,
+  .live-dashboard-heading {
+    align-items: flex-start;
+  }
+}
+
 .lead-table {
   width: 100%;
   min-width: 1000px;
@@ -517,4 +832,220 @@ textarea {
   .lead-details-grid {
     grid-template-columns: 1fr;
   }
+}
+/* Sales Command Center Tabs */
+.command-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 24px 0 28px;
+  padding: 6px;
+  width: fit-content;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.command-tab {
+  position: relative;
+
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.command-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.command-tab:active {
+  transform: translateY(1px);
+}
+
+.command-tab.active {
+  background: rgba(48, 164, 255, 0.14);
+  color: #ffffff;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(48, 164, 255, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.command-tab.active::after {
+  content: "";
+
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+
+  height: 2px;
+  border-radius: 999px;
+
+  background: #30a4ff;
+}
+
+.command-tab:focus-visible {
+  outline: 2px solid rgba(48, 164, 255, 0.7);
+  outline-offset: 2px;
+}
+.command-employee-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.command-employee-actions button {
+  min-width: 52px;
+  padding: 6px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.command-employee-actions button:hover {
+  background: rgba(48, 164, 255, 0.1);
+  border-color: rgba(48, 164, 255, 0.35);
+  color: #ffffff;
+}
+
+.command-employee-actions button:active {
+  transform: translateY(1px);
+}
+
+/* Delete button */
+.command-employee-actions button:last-child {
+  color: rgba(255, 130, 130, 0.8);
+  border-color: rgba(255, 100, 100, 0.12);
+}
+
+.command-employee-actions button:last-child:hover {
+  background: rgba(255, 80, 80, 0.1);
+  border-color: rgba(255, 100, 100, 0.35);
+  color: #ff9b9b;
+}
+
+.command-employee-actions button:focus-visible {
+  outline: 2px solid rgba(48, 164, 255, 0.6);
+  outline-offset: 2px;
+}
+.command-employee-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.command-employee-member:last-child {
+  border-bottom: none;
+}
+
+.command-employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.command-employee-info strong {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.command-employee-info span {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+.command-employee-role {
+  margin-left: auto;
+  padding: 4px 8px;
+
+  border: 1px solid rgba(48, 164, 255, 0.18);
+  border-radius: 999px;
+
+  background: rgba(48, 164, 255, 0.07);
+  color: rgba(255, 255, 255, 0.65);
+
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.command-section-heading > button {
+  padding: 8px 14px;
+
+  border: 1px solid rgba(48, 164, 255, 0.35);
+  border-radius: 8px;
+
+  background: rgba(48, 164, 255, 0.1);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.command-section-heading > button:hover {
+  background: rgba(48, 164, 255, 0.18);
+  border-color: rgba(48, 164, 255, 0.55);
+
+  box-shadow: 0 4px 14px rgba(48, 164, 255, 0.12);
+}
+
+.command-section-heading > button:active {
+  transform: translateY(1px);
+}
+
+.command-section-heading > button:focus-visible {
+  outline: 2px solid rgba(48, 164, 255, 0.7);
+  outline-offset: 2px;
 }

@@ -104,9 +104,64 @@ function getPriority(score) {
   return 'LOW';
 }
 
+const MOCK_COMMAND_CENTER_KPIS = [
+  { label: 'Total Leads', value: '128', detail: '+14 this month', tone: 'blue' },
+  { label: 'Hot Leads', value: '24', detail: '8 need attention', tone: 'red' },
+  { label: 'Active Opportunities', value: '42', detail: '£3.6m open value', tone: 'amber' },
+  { label: 'Won Deals', value: '11', detail: '24.4% conversion', tone: 'green' },
+  { label: 'Pipeline Value', value: '£4.8m', detail: '+12% vs last month', tone: 'cyan' },
+];
+
+const MOCK_PIPELINE_STAGES = [
+  { name: 'New', count: 32, value: '£920k', progress: 100 },
+  { name: 'Contacted', count: 26, value: '£780k', progress: 81 },
+  { name: 'Qualified', count: 18, value: '£640k', progress: 56 },
+  { name: 'Viewing / Appointment', count: 14, value: '£1.1m', progress: 44 },
+  { name: 'Negotiation', count: 10, value: '£890k', progress: 31 },
+  { name: 'Won', count: 11, value: '£510k', progress: 34 },
+];
+
+const MOCK_TEAM_PERFORMANCE = [
+  { name: 'Amelia Hart', initials: 'AH', assigned: 31, active: 12, won: 4, conversion: '28%' },
+  { name: 'Marcus Cole', initials: 'MC', assigned: 27, active: 10, won: 3, conversion: '24%' },
+  { name: 'Priya Shah', initials: 'PS', assigned: 24, active: 9, won: 3, conversion: '27%' },
+  { name: 'Daniel Reed', initials: 'DR', assigned: 22, active: 7, won: 1, conversion: '18%' },
+];
+const initialMockEmployees = [
+    {
+      id: 1,
+      name: 'Amelia Hart',
+      email: 'amelia.hart@example.com',
+      role: 'Sales Agent',
+    },
+    {
+      id: 2,
+      name: 'Marcus Cole',
+      email: 'marcus.cole@example.com',
+      role: 'Sales Agent',
+    },
+    {
+      id: 3,
+      name: 'Priya Shah',
+      email: 'priya.shah@example.com',
+      role: 'Sales Agent',
+    },
+    {
+      id: 4,
+      name: 'Daniel Reed',
+      email: 'daniel.reed@example.com',
+      role: 'Sales Agent',
+    },
+  ];
+
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
+  const [employees, setEmployees] = useState(initialMockEmployees);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [newEmployeeName, setNewEmployeeName] = useState('');
+  const [newEmployeeEmail, setNewEmployeeEmail] = useState('');
   const [error, setError] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [followups, setFollowups] = useState([]);
@@ -117,6 +172,7 @@ function AdminDashboard() {
   const [upcomingFollowups, setUpcomingFollowups] = useState([]);
   const [processingFollowupId, setProcessingFollowupId] = useState(null);
   const [upcomingFollowupsLoading, setUpcomingFollowupsLoading] = useState(true);
+  
   useEffect(() => {
     async function loadLeads() {
       try {
@@ -297,6 +353,32 @@ async function handleProcessFollowup(followupId) {
       setIsSchedulingFollowup(false);
     }
   }
+  function handleAddEmployee(event) {
+    event.preventDefault();
+
+    const name = newEmployeeName.trim();
+    const email = newEmployeeEmail.trim();
+
+    if (!name || !email) {
+      return;
+    }
+
+    const newEmployee = {
+      id: Date.now(),
+      name,
+      email,
+      role: 'Sales Agent',
+    };
+
+    setEmployees((previousEmployees) => [
+      ...previousEmployees,
+      newEmployee,
+    ]);
+
+    setNewEmployeeName('');
+    setNewEmployeeEmail('');
+    setShowEmployeeForm(false);
+  }
 
   const totalLeads = leads.length;
   const highPriority = leads.filter(
@@ -311,11 +393,235 @@ async function handleProcessFollowup(followupId) {
 
   return (
     <main className="app-shell">
-      <div className="page-shell" style={{ display: 'block', maxWidth: '1200px' }}>
+      <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '1200px' }}>
         <section className="form-card" style={{ width: '100%' }}>
-          <div className="form-header">
-            <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
-            <h2>Sales Dashboard</h2>
+          <nav className="command-tabs" aria-label="Sales Command Center">
+            <button
+              type="button"
+              className={activeTab === 'overview' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('overview')}
+            >
+              Overview
+            </button>
+
+            <button
+              type="button"
+              className={activeTab === 'leads' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('leads')}
+            >
+              Leads
+            </button>
+
+            <button
+              type="button"
+              className={activeTab === 'pipeline' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('pipeline')}
+            >
+              Pipeline
+            </button>
+
+            <button
+              type="button"
+              className={activeTab === 'team' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('team')}
+            >
+              Team
+            </button>
+
+            <button
+              type="button"
+              className={activeTab === 'followups' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('followups')}
+            >
+              Follow-ups
+            </button>
+          </nav>
+          <div className="form-header command-center-header">
+            <div>
+              <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
+              <h2>Sales Command Center</h2>
+              <p className="command-center-subtitle">
+                A focused view of pipeline health, opportunity movement, and team momentum.
+              </p>
+            </div>
+            <span className="command-center-snapshot">Illustrative overview</span>
+          </div>
+
+          {activeTab === 'overview' && (
+          <section className="command-center-overview" aria-label="Sales command center overview">
+            <div className="command-kpi-grid">
+              {MOCK_COMMAND_CENTER_KPIS.map((kpi) => (
+                <article className={`command-kpi-card command-kpi-${kpi.tone}`} key={kpi.label}>
+                  <span>{kpi.label}</span>
+                  <strong>{kpi.value}</strong>
+                  <small>{kpi.detail}</small>
+                </article>
+              ))}
+            </div>
+
+            <div className="command-overview-grid">
+              <section className="command-panel command-team-panel">
+                <div className="command-section-heading">
+                  <div>
+                    <span>Team Performance</span>
+                    <h3>Sales activity</h3>
+                  </div>
+                  <span className="lead-badge followup-sent">On track</span>
+                </div>
+
+                <div className="command-team-list">
+                  {MOCK_TEAM_PERFORMANCE.map((member) => (
+                    <article className="command-team-member" key={member.name}>
+                      <div className="command-team-person">
+                        <span className="command-team-avatar">{member.initials}</span>
+                        <strong>{member.name}</strong>
+                      </div>
+                      <dl className="command-team-metrics">
+                        <div>
+                          <dt>Assigned</dt>
+                          <dd>{member.assigned}</dd>
+                        </div>
+                        <div>
+                          <dt>Active</dt>
+                          <dd>{member.active}</dd>
+                        </div>
+                        <div>
+                          <dt>Won</dt>
+                          <dd>{member.won}</dd>
+                        </div>
+                        <div>
+                          <dt>Conversion</dt>
+                          <dd>{member.conversion}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </section>
+          )}
+
+            {activeTab === 'team' && (
+              <section className="command-panel">
+                <div className="command-section-heading">
+                  <div>
+                    <span>Sales Team</span>
+                    <h3>Team performance</h3>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="command-add-button"
+                    onClick={() => setShowEmployeeForm((current) => !current)}
+                  >
+                    {showEmployeeForm ? 'Cancel' : '+ Add Employee'}
+                  </button>
+                </div>
+                {showEmployeeForm && (
+                  <form className="command-employee-form" onSubmit={handleAddEmployee}>
+                    <div>
+                      <label htmlFor="employee-name">Name</label>
+                      <input
+                        id="employee-name"
+                        type="text"
+                        value={newEmployeeName}
+                        onChange={(event) => setNewEmployeeName(event.target.value)}
+                        placeholder="Employee name"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="employee-email">Email</label>
+                      <input
+                        id="employee-email"
+                        type="email"
+                        value={newEmployeeEmail}
+                        onChange={(event) => setNewEmployeeEmail(event.target.value)}
+                        placeholder="Employee email"
+                      />
+                    </div>
+
+                    <button type="submit" className="command-add-button">
+                      Add Employee
+                    </button>
+                  </form>
+                )}
+
+                <div className="command-employee-list">
+                  <div className="command-employee-list-heading">
+                    <span>Team Members</span>
+                    <small>{employees.length} members</small>
+                  </div>
+
+                  {employees.map((employee) => (
+                    <div className="command-employee-member" key={employee.id}>
+                      <span className="command-team-avatar">
+                        {employee.name
+                          .split(' ')
+                          .map((part) => part[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </span>
+
+                      <div className="command-employee-info">
+                        <strong>{employee.name}</strong>
+                        <span>{employee.email}</span>
+                      </div>
+
+                      <span className="command-employee-role">
+                        {employee.role}
+                      </span>
+
+                      <div className="command-employee-actions">
+                        <button
+                          type="button"
+                          onClick={() => console.log('Edit employee:', employee.id)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => console.log('Delete employee:', employee.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                  </section>
+                )}
+
+                {activeTab === 'pipeline' && (
+                  <section className="command-panel command-pipeline-panel">
+                <div className="command-pipeline-grid">
+                  {MOCK_PIPELINE_STAGES.map((stage) => (
+                    <article className="command-pipeline-stage" key={stage.name}>
+                      <div className="command-stage-heading">
+                        <span>{stage.name}</span>
+                        <strong>{stage.count}</strong>
+                      </div>
+                      <div className="command-stage-track" aria-hidden="true">
+                        <span style={{ width: `${stage.progress}%` }} />
+                      </div>
+                      <small>{stage.value}</small>
+                    </article>
+                  ))}
+                </div>
+              </section>
+          )}
+
+          {activeTab === 'leads' && (
+          <>
+          <div className="live-dashboard-heading">
+            <div>
+              <span>Live Lead Operations</span>
+              <h3>Lead activity</h3>
+            </div>
+            <span className="lead-badge followup-sent">API connected</span>
           </div>
 
           {isLoading && <p>Loading leads...</p>}
@@ -605,6 +911,8 @@ async function handleProcessFollowup(followupId) {
                 </div>
               )}
             </>
+          )}
+          </>
           )}
         </section>
       </div>
