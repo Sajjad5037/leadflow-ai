@@ -30,13 +30,13 @@ def qualify_lead(
     client = OpenAI(api_key=api_key)
 
     prompt = f"""
-You are an AI lead qualification assistant for HarbourStone Developments,
-a residential property development company.
+You are an AI lead qualification assistant for Al Qaim Estate.
 
-HarbourStone receives enquiries from prospective buyers interested in
-new residential properties.
+Al Qaim Estate is a real-estate investment business that presents
+investors with property investment opportunities based on their
+available capital, investment goals, timeframe, and desired outcomes.
 
-Analyze the following prospective property buyer using ONLY the
+Analyze the following prospective real-estate investor using ONLY the
 information provided.
 
 Lead:
@@ -54,24 +54,35 @@ Return ONLY valid JSON with exactly these fields:
 {{
   "score": 0,
   "temperature": "COLD",
-  "summary": "Concise description of the buyer opportunity.",
+  "summary": "Concise description of the investment opportunity this lead represents.",
   "reasoning": "Concise explanation of why this score was given.",
-  "recommended_action": "Suggested next sales action."
+  "recommended_action": "Suggested next action for engaging this investor."
 }}
 
 Rules:
 - score must be an integer from 0 to 100.
 - temperature must be exactly one of: HOT, WARM, COLD.
-- HOT = score 80-100.
-- WARM = score 50-79.
-- COLD = score 0-49.
+- HOT = score 80-100: strong investment intent, meaningful available
+  capital or willingness to invest, clear investment goals and
+  timeframe, and strong readiness to invest.
+- WARM = score 50-79: genuine investment interest, but some important
+  information is missing, or the investment timeframe or readiness to
+  invest is uncertain.
+- COLD = score 0-49: vague interest, no meaningful investment intent,
+  or little evidence of readiness to invest.
 - Do not invent information.
 - Base the score only on the information provided.
-- Consider signals such as stated purchase timeline, property
-  requirements, level of buying intent, and specific enquiry details
-  when those signals are explicitly provided.
-- Do not assume a budget, financial position, property availability,
-  or purchase timeline unless the lead provides it.
+- Consider signals such as approximate capital available or
+  willingness to invest, investment timeframe, investment goals,
+  expected return or outcome, seriousness and clarity of investment
+  intent, readiness to invest, and any stated preferences or
+  requirements for a real-estate opportunity, when those signals are
+  explicitly provided.
+- Do not assume an amount of capital, financial position, investment
+  timeframe, or readiness to invest unless the lead provides it.
+- If the lead mentions an expected return or outcome, treat it only as
+  the investor's own stated target or expectation. Never imply or
+  suggest that Al Qaim Estate guarantees or promises any return.
 - Keep summary concise.
 - Keep reasoning concise.
 - Keep recommended_action concise.
@@ -156,17 +167,19 @@ def generate_followup_email(
     client = OpenAI(api_key=api_key)
 
     prompt = f"""
-    You are an AI sales follow-up assistant for HarbourStone Developments,
-    a residential property development company.
+    You are an AI follow-up assistant for Al Qaim Estate, a real-estate
+    investment business that presents investors with property investment
+    opportunities based on their available capital, investment goals,
+    timeframe, and desired outcomes.
 
     Write a concise, professional follow-up email for this prospective
-    property buyer using ONLY the information provided.
+    real-estate investor using ONLY the information provided.
 
     Lead:
     Name: {name}
     Company: {company}
 
-    Enquiry:
+    Stated Goals / Requirements:
     {business_problem}
 
     AI Summary:
@@ -184,19 +197,29 @@ def generate_followup_email(
 
     Rules:
     - Address the lead by name.
-    - Refer naturally to their property enquiry.
+    - Treat the recipient as a prospective real-estate investor, not a
+    property buyer and not a business seeking automation.
+    - Naturally acknowledge their stated investment goals, approximate
+    investment intent, timeframe, expected outcome/return target, or
+    preferences, but only when those details are present in the
+    information provided.
+    - Encourage the recipient to discuss suitable real-estate investment
+    opportunities through a strategy call.
     - Keep the email concise.
-    - Make the email helpful and professional.
+    - Make the email helpful, professional, and trustworthy.
     - Align the email with the recommended action.
-    - Do not invent property availability, prices, discounts, inspections,
-    appointment times, financing options, or other facts.
+    - Do not promise guaranteed returns or imply that any investment
+    outcome is certain. Refer to returns only as targets, expectations,
+    or potential outcomes.
+    - Do not invent property availability, prices, discounts,
+    inspections, appointment times, financing options, or other facts.
     - Do not invent facts that were not provided by the lead.
     - Do not mention that AI generated the email.
-    - Sign the email as "HarbourStone Developments".
+    - Sign the email as "Al Qaim Estate".
     - Never use placeholders such as "[Your Name]" or "[Name]".
     - End the email with "Best regards," followed by
-    "HarbourStone Developments".
-    """ 
+    "Al Qaim Estate".
+    """
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         temperature=0.3,
@@ -205,8 +228,8 @@ def generate_followup_email(
             {
                 "role": "system",
                 "content": (
-                    "You are a professional sales follow-up assistant. "
-                    "Return only valid JSON."
+                    "You are a professional real-estate investment "
+                    "follow-up assistant. Return only valid JSON."
                 ),
             },
             {
