@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles.css';
+import heroPropertyImage from './assets/al-qaim-estate-hero-property.png';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const initialFormState = {
   name: '',
-  company: '',
+  profession: '',
   email: '',
   phone: '',
   message: '',
@@ -18,8 +19,8 @@ function validateForm(values) {
     nextErrors.name = 'Please enter your name.';
   }
 
-  if (!values.company.trim()) {
-    nextErrors.company = 'Please enter your company name.';
+  if (!values.profession.trim()) {
+    nextErrors.profession = 'Please enter your profession.';
   }
 
   if (!values.email.trim()) {
@@ -36,9 +37,9 @@ function validateForm(values) {
   }
 
   if (!values.message.trim()) {
-    nextErrors.message = 'Tell us a little about your business challenge.';
+    nextErrors.message = 'Tell us a little about your investment goals.';
   } else if (values.message.trim().length < 20) {
-    nextErrors.message = 'Please share at least 20 characters about your challenge.';
+    nextErrors.message = 'Please share at least 20 characters about your investment goals.';
   }
 
   return nextErrors;
@@ -968,7 +969,7 @@ function App() {
     try {
       await submitLead({
         name: formData.name,
-        company: formData.company,
+        company: formData.profession,
         email: formData.email,
         phone: formData.phone,
         message: formData.message,
@@ -986,124 +987,214 @@ function App() {
   };
 
   return (
-    <main className="app-shell">
-      <div className="page-shell">
-        <section className="hero-panel">
-          <p className="eyebrow">AI-powered automation for growing businesses</p>
-          <h1>Turn repetitive work into revenue with LeadFlow Solutions.</h1>
-          <p className="subtitle">
-            We design automation systems that help teams respond faster, close more deals,
-            and scale operations without adding more manual overhead.
-          </p>
-
-          <ul className="benefits" aria-label="Business benefits">
-            <li>Faster lead response and follow-up</li>
-            <li>Smarter workflows across sales and operations</li>
-            <li>Clearer visibility into customer opportunities</li>
-          </ul>
-        </section>
-
-        <section className="form-card" aria-labelledby="lead-form-title">
-          <div className="form-header">
-            <p className="form-kicker">Free automation assessment</p>
-            <h2 id="lead-form-title">Request a strategy call</h2>
+    <>
+      <header className="site-header">
+        <div className="site-header-inner">
+          <div className="site-brand">
+            <span className="site-brand-name">Al Qaim Estate</span>
+            <span className="site-brand-subtitle">FOR REAL ESTATE BUSINESSES</span>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="field-row">
-              <label>
-                <span>Name</span>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Jane Smith"
-                  aria-invalid={Boolean(errors.name)}
-                  disabled={isSubmitting}
-                />
-                {errors.name && <small className="error-text">{errors.name}</small>}
-              </label>
+          <nav className="site-nav" aria-label="Primary">
+            <span className="site-nav-link">Properties</span>
+            <a className="site-nav-link" href="#about">About Us</a>
+          </nav>
+        </div>
+      </header>
 
-              <label>
-                <span>Company</span>
-                <input
-                  type="text"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  placeholder="Acme Studio"
-                  aria-invalid={Boolean(errors.company)}
-                  disabled={isSubmitting}
-                />
-                {errors.company && <small className="error-text">{errors.company}</small>}
-              </label>
+      <main className="app-shell">
+        <div className="page-shell">
+          <section className="hero-panel" id="hero">
+            <p className="eyebrow">REAL ESTATE INVESTMENT OPPORTUNITIES</p>
+            <h1>Invest Less. <span className="hero-highlight">Earn More.</span> With Al Qaim Estate.</h1>
+            <p className="subtitle">
+              Put your capital to work with carefully selected real estate opportunities designed
+              around your investment goals.
+            </p>
+
+            <ul className="benefits" aria-label="Business benefits">
+              <li>Invest Smart — Explore opportunities selected for your investment goals</li>
+              <li>Earn More — Put your available capital to work through real estate</li>
+              <li>Grow Your Wealth — Build long-term value through strategic property investment</li>
+            </ul>
+
+            <div className="hero-image-wrap">
+              <img
+                className="hero-image"
+                src={heroPropertyImage}
+                alt="Modern luxury property represented by Al Qaim Estate"
+              />
+            </div>
+          </section>
+
+          <section className="form-card" aria-labelledby="lead-form-title">
+            <div className="form-header">
+              <p className="form-kicker">YOUR NEXT SMART INVESTMENT IS A CALL AWAY</p>
+              <h2 id="lead-form-title">Request a Free Strategy Call</h2>
+              <p>
+                Tell us what you're looking for, and we'll help you explore opportunities that
+                fit your investment goals.
+              </p>
             </div>
 
-            <div className="field-row">
-              <label>
-                <span>Email</span>
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="field-row">
+                <label>
+                  <span>Name</span>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Ahmad Khan"
+                    aria-invalid={Boolean(errors.name)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.name && <small className="error-text">{errors.name}</small>}
+                </label>
+
+                <label>
+                <span>Profession</span>
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="profession"
+                  value={formData.profession}
                   onChange={handleChange}
-                  placeholder="jane@company.com"
-                  aria-invalid={Boolean(errors.email)}
+                  placeholder="Own Business"
+                  aria-invalid={Boolean(errors.profession)}
                   disabled={isSubmitting}
                 />
-                {errors.email && <small className="error-text">{errors.email}</small>}
+                {errors.profession && (
+                  <small className="error-text">{errors.profession}</small>
+                )}
               </label>
+              </div>
 
-              <label>
-                <span>Phone</span>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="(555) 123-4567"
-                  aria-invalid={Boolean(errors.phone)}
-                  disabled={isSubmitting}
-                />
-                {errors.phone && <small className="error-text">{errors.phone}</small>}
-              </label>
-            </div>
+              <div className="field-row">
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="ahmadkhan786@gmail.com"
+                    aria-invalid={Boolean(errors.email)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.email && <small className="error-text">{errors.email}</small>}
+                </label>
 
-            <label className="full-width">
-              <span>Business problem / message</span>
+                <label>
+                  <span>Phone</span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="03004112884"
+                    aria-invalid={Boolean(errors.phone)}
+                    disabled={isSubmitting}
+                  />
+                  {errors.phone && <small className="error-text">{errors.phone}</small>}
+                </label>
+              </div>
+
+              <label className="full-width">
+              <span>Investment Goals</span>
+
               <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                rows="5"
-                placeholder="Tell us about the bottlenecks, manual work, or customer experience issues you want to solve."
+                rows="13"
+                style={{
+                  minHeight: '220px',
+                  resize: 'vertical',
+                }}
+                placeholder="Tell us what you're looking for, your approximate budget, and the type of property or investment opportunity you're interested in."
                 aria-invalid={Boolean(errors.message)}
                 disabled={isSubmitting}
               />
-              {errors.message && <small className="error-text">{errors.message}</small>}
+
+              {errors.message && (
+                <small className="error-text">{errors.message}</small>
+              )}
             </label>
 
-            <button type="submit" className="submit-button" disabled={isSubmitting}>
-              {isSubmitting ? 'Sending...' : 'Get My Free Assessment'}
+              <button type="submit" className="submit-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Request My Free Strategy Call'}
+              </button>
+
+              {submitError && (
+                <p className="error-banner" role="alert">
+                  {submitError}
+                </p>
+              )}
+
+              {isSubmitted && (
+                <p className="success-state" role="status" aria-live="polite">
+                  Thanks! Your request has been received. An Al Qaim Estate team member will reach out to
+                  schedule your free strategy call.
+                </p>
+              )}
+            </form>
+          </section>
+        </div>
+
+        <section className="about-section" id="about">
+          <p className="eyebrow">ABOUT AL QAIM ESTATE</p>
+          <h2 className="about-heading">Helping You Find the Right Real Estate Opportunity</h2>
+          <p className="about-body">
+            Al Qaim Estate connects investors and property buyers with carefully selected real
+            estate opportunities. We focus on understanding what our clients are looking for and
+            helping them explore properties that align with their budget, goals, and investment
+            interests.
+          </p>
+          <p className="about-body">
+            Our goal is to make the process of discovering and evaluating real estate
+            opportunities simple, transparent, and straightforward — from the first conversation
+            to finding an opportunity that feels right for you.
+          </p>
+          <a className="submit-button about-cta" href="#hero">Explore Properties</a>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <p className="site-footer-name">Al Qaim Estate</p>
+          <p>Office 12, Al Qaim Business Center</p>
+          <p>Main Boulevard, Lahore, Pakistan</p>
+          <p>+92 300 1234567</p>
+
+          <div className="site-footer-social" aria-label="Al Qaim Estate on social media">
+            <button type="button" className="site-footer-social-link" aria-label="Facebook" title="Facebook">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M13.5 21v-7.6h2.55l.38-2.96h-2.93v-1.9c0-.86.24-1.44 1.47-1.44h1.57V4.42c-.27-.04-1.2-.12-2.28-.12-2.26 0-3.8 1.38-3.8 3.9v2.18H8v2.96h2.46V21h3.04z" />
+              </svg>
             </button>
 
-            {submitError && (
-              <p className="error-banner" role="alert">
-                {submitError}
-              </p>
-            )}
+            <button type="button" className="site-footer-social-link" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8zm0 5.6a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4zm4.55-5.74a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0zM20 8.05c-.05-1.06-.29-2-1.06-2.77-.77-.77-1.71-1-2.77-1.06C15.05 4.16 8.95 4.16 7.83 4.22c-1.06.05-2 .29-2.77 1.06-.77.77-1 1.71-1.06 2.77C4 9.17 4 15.27 4 15.27c.05 1.06.29 2 1.06 2.77.77.77 1.71 1 2.77 1.06 1.12.06 7.22.06 8.34 0 1.06-.05 2-.29 2.77-1.06.77-.77 1-1.71 1.06-2.77.06-1.12.06-7.22 0-8.34zM18.32 16.9a2.44 2.44 0 0 1-1.42 1.42c-.98.39-3.32.3-4.4.3s-3.42.09-4.4-.3a2.44 2.44 0 0 1-1.42-1.42c-.39-.98-.3-3.32-.3-4.4s-.09-3.42.3-4.4A2.44 2.44 0 0 1 8.1 6.68c.98-.39 3.32-.3 4.4-.3s3.42-.09 4.4.3a2.44 2.44 0 0 1 1.42 1.42c.39.98.3 3.32.3 4.4s.09 3.42-.3 4.4z" />
+              </svg>
+            </button>
 
-            {isSubmitted && (
-              <p className="success-state" role="status" aria-live="polite">
-                Thanks! Your request has been received. A LeadFlow strategist will reach out to
-                schedule your free automation assessment.
-              </p>
-            )}
-          </form>
-        </section>
-      </div>
-    </main>
+            <button type="button" className="site-footer-social-link" aria-label="LinkedIn" title="LinkedIn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M6.94 8.5H4.06V20h2.88V8.5zM5.5 4c-.97 0-1.75.79-1.75 1.75 0 .96.78 1.75 1.75 1.75s1.75-.79 1.75-1.75C7.25 4.79 6.47 4 5.5 4zM20 13.4c0-3.06-1.63-4.49-3.81-4.49-1.76 0-2.54.97-2.98 1.65V8.5H10.34c.04.85 0 11.5 0 11.5h2.87v-6.42c0-.34.02-.69.12-.94.27-.69.89-1.4 1.93-1.4 1.36 0 1.91 1.03 1.91 2.55V20H20v-6.6z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="YouTube" title="YouTube">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M21.6 7.6a2.75 2.75 0 0 0-1.94-1.95C18 5.2 12 5.2 12 5.2s-6 0-7.66.45A2.75 2.75 0 0 0 2.4 7.6 28.6 28.6 0 0 0 2 12a28.6 28.6 0 0 0 .4 4.4 2.75 2.75 0 0 0 1.94 1.95c1.66.45 7.66.45 7.66.45s6 0 7.66-.45a2.75 2.75 0 0 0 1.94-1.95c.27-1.45.4-2.92.4-4.4a28.6 28.6 0 0 0-.4-4.4zM10 14.9V9.1l5.2 2.9-5.2 2.9z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
 
