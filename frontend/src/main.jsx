@@ -157,7 +157,7 @@ const initialMockEmployees = [
 
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('leads');
   const [isLoading, setIsLoading] = useState(true);
   const [employees, setEmployees] = useState(initialMockEmployees);
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
