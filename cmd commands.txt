@@ -1,0 +1,4 @@
+cd C:\Users\Admin\Documents\leadflow-ai\backend>
+..\.venv-1\Scripts\activate
+uvicorn app.main:app --reload
+

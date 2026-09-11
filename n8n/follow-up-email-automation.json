@@ -1,0 +1,91 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1e3f1277-fc57-4ca9-88c1-cb9f8b24b2e2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://leadflow-ai-production-e5f0.up.railway.app/api/followups/due",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "443304c9-6877-42d3-a7e6-063ef20ed2d0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://leadflow-ai-production-e5f0.up.railway.app/api/followups/{{$json.id}}/process",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        0
+      ],
+      "id": "5df1d223-fa48-4ea0-86b0-a06b0fa3220f",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "32f4aac6-233f-4e55-a500-8a48c3e9d904",
+  "meta": {
+    "instanceId": "3dd2a11c4cd12d3a510cd892f8bf497a825a9199fd319eb73b071f46c480302b"
+  },
+  "nodeGroups": [],
+  "id": "axdfitho3GjvFK46",
+  "tags": []
+}
