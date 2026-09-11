@@ -440,7 +440,7 @@ async function handleProcessFollowup(followupId) {
           <div className="form-header command-center-header">
             <div>
               <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
-              <h2>Sales Command Center</h2>
+              <h2>Sales Command Center-Click on any lead to see its AI details</h2>
               <p className="command-center-subtitle">
                 A focused view of pipeline health, opportunity movement, and team momentum.
               </p>
