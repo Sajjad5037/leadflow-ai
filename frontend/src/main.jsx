@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles.css';
 import heroPropertyImage from './assets/al-qaim-estate-hero-property.png';
@@ -155,6 +155,127 @@ const initialMockEmployees = [
     },
   ];
 
+const PROPERTY_TYPE_OPTIONS = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'HOUSE', 'OTHER'];
+const PROPERTY_STATUS_OPTIONS = ['AVAILABLE', 'RESERVED', 'SOLD', 'OFF_MARKET'];
+
+const initialPropertyFormState = {
+  title: '',
+  description: '',
+  property_type: 'APARTMENT',
+  status: 'AVAILABLE',
+  price: '',
+  currency: 'PKR',
+  location: '',
+  address: '',
+  size_value: '',
+  size_unit: '',
+  bedrooms: '',
+  bathrooms: '',
+  is_featured: false,
+};
+
+function validatePropertyForm(values) {
+  if (!values.title.trim()) {
+    return 'Please enter a property title.';
+  }
+
+  if (!values.description.trim()) {
+    return 'Please enter a property description.';
+  }
+
+  if (!PROPERTY_TYPE_OPTIONS.includes(values.property_type)) {
+    return 'Please select a valid property type.';
+  }
+
+  if (!PROPERTY_STATUS_OPTIONS.includes(values.status)) {
+    return 'Please select a valid status.';
+  }
+
+  if (!values.location.trim()) {
+    return 'Please enter a property location.';
+  }
+
+  if (values.price === '' || Number.isNaN(Number(values.price)) || Number(values.price) < 0) {
+    return 'Please enter a valid, non-negative price.';
+  }
+
+  if (
+    values.size_value !== '' &&
+    (Number.isNaN(Number(values.size_value)) || Number(values.size_value) < 0)
+  ) {
+    return 'Size must be a valid, non-negative number.';
+  }
+
+  if (
+    values.bedrooms !== '' &&
+    (Number.isNaN(Number(values.bedrooms)) || Number(values.bedrooms) < 0)
+  ) {
+    return 'Bedrooms must be a valid, non-negative number.';
+  }
+
+  if (
+    values.bathrooms !== '' &&
+    (Number.isNaN(Number(values.bathrooms)) || Number(values.bathrooms) < 0)
+  ) {
+    return 'Bathrooms must be a valid, non-negative number.';
+  }
+
+  return '';
+}
+
+function buildPropertyPayload(values) {
+  return {
+    title: values.title.trim(),
+    description: values.description.trim(),
+    property_type: values.property_type,
+    status: values.status,
+    price: Number(values.price),
+    currency: values.currency.trim() || 'PKR',
+    location: values.location.trim(),
+    address: values.address.trim() ? values.address.trim() : null,
+    size_value: values.size_value !== '' ? Number(values.size_value) : null,
+    size_unit: values.size_unit.trim() ? values.size_unit.trim() : null,
+    bedrooms: values.bedrooms !== '' ? Number(values.bedrooms) : null,
+    bathrooms: values.bathrooms !== '' ? Number(values.bathrooms) : null,
+    is_featured: values.is_featured,
+  };
+}
+
+function propertyToFormValues(property) {
+  return {
+    title: property.title ?? '',
+    description: property.description ?? '',
+    property_type: property.property_type ?? 'APARTMENT',
+    status: property.status ?? 'AVAILABLE',
+    price: property.price !== null && property.price !== undefined ? String(property.price) : '',
+    currency: property.currency ?? 'PKR',
+    location: property.location ?? '',
+    address: property.address ?? '',
+    size_value:
+      property.size_value !== null && property.size_value !== undefined
+        ? String(property.size_value)
+        : '',
+    size_unit: property.size_unit ?? '',
+    bedrooms:
+      property.bedrooms !== null && property.bedrooms !== undefined ? String(property.bedrooms) : '',
+    bathrooms:
+      property.bathrooms !== null && property.bathrooms !== undefined
+        ? String(property.bathrooms)
+        : '',
+    is_featured: Boolean(property.is_featured),
+  };
+}
+
+function getOrderedPropertyImages(property) {
+  const images = property.images || [];
+  const primaryImages = images.filter((image) => image.is_primary);
+  const otherImages = images
+    .filter((image) => !image.is_primary)
+    .sort((a, b) => a.display_order - b.display_order);
+
+  return [...primaryImages, ...otherImages];
+}
+
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
   const [activeTab, setActiveTab] = useState('leads');
@@ -173,7 +294,19 @@ function AdminDashboard() {
   const [upcomingFollowups, setUpcomingFollowups] = useState([]);
   const [processingFollowupId, setProcessingFollowupId] = useState(null);
   const [upcomingFollowupsLoading, setUpcomingFollowupsLoading] = useState(true);
-  
+  const [properties, setProperties] = useState([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+  const [propertiesError, setPropertiesError] = useState('');
+  const [propertyForm, setPropertyForm] = useState(initialPropertyFormState);
+  const [propertyFormError, setPropertyFormError] = useState('');
+  const [propertyFormSubmitting, setPropertyFormSubmitting] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [propertyView, setPropertyView] = useState('list');
+  const [propertyImages, setPropertyImages] = useState([]);
+  const [removedPropertyImageIds, setRemovedPropertyImageIds] = useState([]);
+  const propertyFormRef = useRef(null);
+  const propertyImageInputRef = useRef(null);
+
   useEffect(() => {
     async function loadLeads() {
       try {
@@ -258,6 +391,33 @@ useEffect(() => {
 
   loadUpcomingFollowups();
 }, []);
+useEffect(() => {
+  if (activeTab !== 'properties') {
+    return;
+  }
+
+  async function loadProperties() {
+    setPropertiesLoading(true);
+    setPropertiesError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/properties`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to load properties.');
+      }
+
+      setProperties(data);
+    } catch (requestError) {
+      setPropertiesError(requestError.message || 'Failed to load properties.');
+    } finally {
+      setPropertiesLoading(false);
+    }
+  }
+
+  loadProperties();
+}, [activeTab]);
 async function handleProcessFollowup(followupId) {
   setProcessingFollowupId(followupId);
   setFollowupError('');
@@ -381,6 +541,313 @@ async function handleProcessFollowup(followupId) {
     setShowEmployeeForm(false);
   }
 
+  function handlePropertyFieldChange(event) {
+    const { name, value, type, checked } = event.target;
+
+    setPropertyForm((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+
+    if (propertyFormError) {
+      setPropertyFormError('');
+    }
+  }
+
+  function handlePropertyImagesChange(event) {
+    const files = Array.from(event.target.files || []);
+
+    setPropertyImages((previous) => [
+      ...previous,
+      ...files.map((file) => ({
+        id: null,
+        file,
+        previewUrl: URL.createObjectURL(file),
+        isExisting: false,
+      })),
+    ]);
+  }
+
+  function handleRemovePropertyImage(imageToRemove) {
+    if (imageToRemove.isExisting && imageToRemove.id) {
+      setRemovedPropertyImageIds((previous) => [
+        ...previous,
+        imageToRemove.id,
+      ]);
+    }
+
+    setPropertyImages((previous) =>
+      previous.filter((image) => image !== imageToRemove)
+    );
+  }
+
+  async function handleSetPrimaryPropertyImage(imageToSetPrimary) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/properties/${editingProperty.id}/images/${imageToSetPrimary.id}/primary`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to set primary property image.';
+        throw new Error(message);
+      }
+
+      setPropertyImages((previous) =>
+        previous.map((image) =>
+          image.isExisting
+            ? { ...image, isPrimary: image.id === imageToSetPrimary.id }
+            : image
+        )
+      );
+    } catch (requestError) {
+      setPropertyFormError(
+        requestError.message || 'Failed to set primary property image.'
+      );
+    }
+  }
+
+  function resetPropertyForm() {
+    setEditingProperty(null);
+    setPropertyForm(initialPropertyFormState);
+    setPropertyImages([]);
+    setRemovedPropertyImageIds([]);
+    setPropertyFormError('');
+  }
+
+  async function handleEditProperty(property) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/properties/${property.id}`
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to load property.';
+        throw new Error(message);
+      }
+
+      setEditingProperty(data);
+      setPropertyForm(propertyToFormValues(data));
+      setPropertyImages(
+        (data.images || []).map((image) => ({
+          id: image.id,
+          file: null,
+          previewUrl: image.image_url,
+          isExisting: true,
+          isPrimary: image.is_primary,
+        }))
+      );
+      setPropertyFormError('');
+      setPropertyView('form');
+      propertyFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (requestError) {
+      setPropertyFormError(
+        requestError.message || 'Failed to load property.'
+      );
+    }
+  }
+
+  function handleCancelEditProperty() {
+    resetPropertyForm();
+    setPropertyView('list');
+  }
+
+  function handleShowAddPropertyForm() {
+    resetPropertyForm();
+    setPropertyView('form');
+  }
+
+  async function handlePropertySubmit(event) {
+    event.preventDefault();
+
+    const validationError = validatePropertyForm(propertyForm);
+
+    if (validationError) {
+      setPropertyFormError(validationError);
+      return;
+    }
+
+    setPropertyFormSubmitting(true);
+    setPropertyFormError('');
+
+    const payload = buildPropertyPayload(propertyForm);
+    const isEditing = Boolean(editingProperty);
+
+    try {
+      const response = await fetch(
+        isEditing
+          ? `${API_BASE_URL}/api/properties/${editingProperty.id}`
+          : `${API_BASE_URL}/api/properties`,
+        {
+          method: isEditing ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to save property.';
+        throw new Error(message);
+      }
+
+      if (isEditing) {
+        setProperties((previous) =>
+          previous.map((item) => (item.id === data.id ? data : item))
+        );
+      } else {
+        setProperties((previous) => [data, ...previous]);
+      }
+
+      for (const image of propertyImages) {
+        if (image.isExisting || !image.file) {
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('file', image.file);
+
+        const imageResponse = await fetch(
+          `${API_BASE_URL}/api/properties/${data.id}/images`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        const imageData = await imageResponse.json().catch(() => null);
+
+        if (!imageResponse.ok) {
+          const detail = imageData?.detail;
+          const message =
+            typeof detail === 'string'
+              ? detail
+              : detail?.message || 'Failed to upload property image.';
+          throw new Error(message);
+        }
+      }
+
+      for (const imageId of removedPropertyImageIds) {
+        const imageResponse = await fetch(
+          `${API_BASE_URL}/api/properties/${data.id}/images/${imageId}`,
+          {
+            method: 'DELETE',
+          }
+        );
+
+        const imageData = await imageResponse.json().catch(() => null);
+
+        if (!imageResponse.ok) {
+          const detail = imageData?.detail;
+          const message =
+            typeof detail === 'string'
+              ? detail
+              : detail?.message || 'Failed to delete property image.';
+          throw new Error(message);
+        }
+      }
+
+      resetPropertyForm();
+      setPropertyView('list');
+    } catch (requestError) {
+      setPropertyFormError(requestError.message || 'Failed to save property.');
+    } finally {
+      setPropertyFormSubmitting(false);
+    }
+  }
+
+  async function handleDeleteProperty(propertyId) {
+    const confirmed = window.confirm('Are you sure you want to delete this property?');
+
+    if (!confirmed) {
+      return;
+    }
+
+    setPropertiesError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/properties/${propertyId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.detail?.message || 'Failed to delete property.');
+      }
+
+      setProperties((previous) => previous.filter((item) => item.id !== propertyId));
+
+      if (editingProperty?.id === propertyId) {
+        setEditingProperty(null);
+        setPropertyForm(initialPropertyFormState);
+      }
+    } catch (requestError) {
+      setPropertiesError(requestError.message || 'Failed to delete property.');
+    }
+  }
+
+  async function handlePropertyStatusChange(propertyId, newStatus) {
+    const previousProperties = properties;
+    const targetProperty = properties.find((item) => item.id === propertyId);
+
+    if (!targetProperty || targetProperty.status === newStatus) {
+      return;
+    }
+
+    setProperties((current) =>
+      current.map((item) => (item.id === propertyId ? { ...item, status: newStatus } : item))
+    );
+    setPropertiesError('');
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/properties/${propertyId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.detail?.message || 'Failed to update property status.');
+      }
+
+      setProperties((current) =>
+        current.map((item) => (item.id === propertyId ? data : item))
+      );
+    } catch (requestError) {
+      setProperties(previousProperties);
+      setPropertiesError(requestError.message || 'Failed to update property status.');
+    }
+  }
+
   const totalLeads = leads.length;
   const highPriority = leads.filter(
     (lead) => getPriority(lead.qualification?.score) === 'HIGH'
@@ -436,11 +903,19 @@ async function handleProcessFollowup(followupId) {
             >
               Follow-ups
             </button>
+
+            <button
+              type="button"
+              className={activeTab === 'properties' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('properties')}
+            >
+              Manage Properties
+            </button>
           </nav>
           <div className="form-header command-center-header">
             <div>
               <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
-              <h2>Sales Command Center-Click on any lead to see its AI details</h2>
+              <h2>Sales Command Center-Click on any lead to see its AI cmddetails</h2>
               <p className="command-center-subtitle">
                 A focused view of pipeline health, opportunity movement, and team momentum.
               </p>
@@ -915,6 +1390,402 @@ async function handleProcessFollowup(followupId) {
           )}
           </>
           )}
+
+          {activeTab === 'properties' && (
+            <section className="command-panel property-panel" aria-label="Manage Properties">
+              <div className="command-section-heading">
+                <div>
+                  <span>Property Portfolio</span>
+                  <h3>Manage Properties</h3>
+                </div>
+                <span className="lead-badge followup-sent">API connected</span>
+              </div>
+
+              <nav className="command-tabs property-view-tabs" aria-label="Manage Properties view">
+                <button
+                  type="button"
+                  className={propertyView === 'list' ? 'command-tab active' : 'command-tab'}
+                  onClick={handleCancelEditProperty}
+                >
+                  View Properties
+                </button>
+
+                <button
+                  type="button"
+                  className={propertyView === 'form' ? 'command-tab active' : 'command-tab'}
+                  onClick={handleShowAddPropertyForm}
+                >
+                  Add Property
+                </button>
+              </nav>
+
+              {propertyView === 'form' && (
+              <form className="property-form" ref={propertyFormRef} onSubmit={handlePropertySubmit}>
+                <h4>{editingProperty ? 'Edit Property' : 'Add Property'}</h4>
+
+                <div className="property-form-grid">
+                  <label>
+                    <span>Title</span>
+                    <input
+                      type="text"
+                      name="title"
+                      value={propertyForm.title}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="Sea View Apartment"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Property Type</span>
+                    <select
+                      name="property_type"
+                      value={propertyForm.property_type}
+                      onChange={handlePropertyFieldChange}
+                      disabled={propertyFormSubmitting}
+                    >
+                      {PROPERTY_TYPE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Status</span>
+                    <select
+                      name="status"
+                      value={propertyForm.status}
+                      onChange={handlePropertyFieldChange}
+                      disabled={propertyFormSubmitting}
+                    >
+                      {PROPERTY_STATUS_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Price</span>
+                    <input
+                      type="number"
+                      name="price"
+                      min="0"
+                      step="0.01"
+                      value={propertyForm.price}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="15000000"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Currency</span>
+                    <input
+                      type="text"
+                      name="currency"
+                      value={propertyForm.currency}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="PKR"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Location</span>
+                    <input
+                      type="text"
+                      name="location"
+                      value={propertyForm.location}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="Karachi"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Size</span>
+                    <input
+                      type="number"
+                      name="size_value"
+                      min="0"
+                      step="0.01"
+                      value={propertyForm.size_value}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="1800"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Size Unit</span>
+                    <input
+                      type="text"
+                      name="size_unit"
+                      value={propertyForm.size_unit}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="sqft"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Bedrooms</span>
+                    <input
+                      type="number"
+                      name="bedrooms"
+                      min="0"
+                      step="1"
+                      value={propertyForm.bedrooms}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="2"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+
+                  <label>
+                    <span>Bathrooms</span>
+                    <input
+                      type="number"
+                      name="bathrooms"
+                      min="0"
+                      step="1"
+                      value={propertyForm.bathrooms}
+                      onChange={handlePropertyFieldChange}
+                      placeholder="2"
+                      disabled={propertyFormSubmitting}
+                    />
+                  </label>
+                </div>
+
+                <label className="full-width">
+                  <span>Description</span>
+                  <textarea
+                    name="description"
+                    value={propertyForm.description}
+                    onChange={handlePropertyFieldChange}
+                    rows="4"
+                    placeholder="Describe the property..."
+                    disabled={propertyFormSubmitting}
+                  />
+                </label>
+
+                <label className="full-width">
+                  <span>Address</span>
+                  <textarea
+                    name="address"
+                    value={propertyForm.address}
+                    onChange={handlePropertyFieldChange}
+                    rows="2"
+                    placeholder="Optional street address"
+                    disabled={propertyFormSubmitting}
+                  />
+                </label>
+
+                <label className="full-width">
+                  <span>Images</span>
+                  <div className="property-file-input-row">
+                    <input
+                      ref={propertyImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePropertyImagesChange}
+                      disabled={propertyFormSubmitting}
+                      className="property-file-input"
+                    />
+
+                    <button
+                      type="button"
+                      className="property-secondary-button"
+                      onClick={() => propertyImageInputRef.current?.click()}
+                      disabled={propertyFormSubmitting}
+                    >
+                      Choose Files
+                    </button>
+
+                    {propertyImages.some((image) => image.file) && (
+                      <span className="property-file-input-filenames">
+                        {propertyImages
+                          .filter((image) => image.file)
+                          .map((image) => image.file.name)
+                          .join(', ')}
+                      </span>
+                    )}
+                  </div>
+                </label>
+
+                {propertyImages.length > 0 && (
+                  <div className="property-image-preview-list">
+                    {propertyImages.map((image) => (
+                      <div
+                        key={image.id ?? image.previewUrl}
+                        className="property-image-preview"
+                      >
+                        <img
+                          src={image.previewUrl}
+                          alt="Property preview"
+                        />
+
+                        <button
+                          type="button"
+                          className="property-image-remove-button"
+                          onClick={() => handleRemovePropertyImage(image)}
+                          aria-label="Remove property image"
+                        >
+                          ×
+                        </button>
+
+                        {image.isExisting && (
+                          image.isPrimary ? (
+                            <span className="property-image-primary-badge">✓ Primary</span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="property-image-set-primary-button"
+                              onClick={() => handleSetPrimaryPropertyImage(image)}
+                            >
+                              Set as Primary
+                            </button>
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className="property-featured-field">
+                  <input
+                    type="checkbox"
+                    name="is_featured"
+                    checked={propertyForm.is_featured}
+                    onChange={handlePropertyFieldChange}
+                    disabled={propertyFormSubmitting}
+                  />
+                  <span>Featured Property</span>
+                </label>
+
+                <div className="property-form-actions">
+                  <button type="submit" className="submit-button" disabled={propertyFormSubmitting}>
+                    {propertyFormSubmitting
+                      ? 'Saving...'
+                      : editingProperty
+                        ? 'Save Changes'
+                        : 'Add Property'}
+                  </button>
+
+                  {editingProperty && (
+                    <button
+                      type="button"
+                      className="property-secondary-button"
+                      onClick={handleCancelEditProperty}
+                      disabled={propertyFormSubmitting}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+
+                {propertyFormError && <p className="error-banner">{propertyFormError}</p>}
+              </form>
+              )}
+
+              {propertyView === 'list' && (
+              <>
+              {propertiesLoading && <p>Loading properties...</p>}
+
+              {propertiesError && <p className="error-banner">{propertiesError}</p>}
+
+              {!propertiesLoading && !propertiesError && properties.length === 0 && (
+                <p>No properties found.</p>
+              )}
+
+              {!propertiesLoading && !propertiesError && properties.length > 0 && (
+                <div className="property-table-wrapper">
+                  <table className="property-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Bedrooms</th>
+                        <th>Bathrooms</th>
+                        <th>Featured</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {properties.map((property) => (
+                        <tr key={property.id}>
+                          <td>{property.title}</td>
+                          <td>{property.property_type}</td>
+                          <td>{property.location}</td>
+                          <td>
+                            {property.currency} {property.price}
+                          </td>
+                          <td className="property-status-cell">
+                            <select
+                              className={`property-status-select property-status-${property.status.toLowerCase()}`}
+                              value={property.status}
+                              onChange={(event) =>
+                                handlePropertyStatusChange(property.id, event.target.value)
+                              }
+                            >
+                              {PROPERTY_STATUS_OPTIONS.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td>{property.bedrooms ?? '—'}</td>
+                          <td>{property.bathrooms ?? '—'}</td>
+                          <td>
+                            <span
+                              className={`property-badge ${
+                                property.is_featured
+                                  ? 'property-badge-featured'
+                                  : 'property-badge-not-featured'
+                              }`}
+                            >
+                              {property.is_featured ? 'Yes' : 'No'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="property-row-actions">
+                              <button
+                                type="button"
+                                className="property-action-button"
+                                onClick={() => handleEditProperty(property)}
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                type="button"
+                                className="property-action-button property-action-danger"
+                                onClick={() => handleDeleteProperty(property.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              </>
+              )}
+            </section>
+          )}
         </section>
       </div>
     </main>
@@ -996,8 +1867,9 @@ function App() {
           </div>
 
           <nav className="site-nav" aria-label="Primary">
-            <span className="site-nav-link">Properties</span>
-            <a className="site-nav-link" href="#about">About Us</a>
+            <a className="site-nav-link" href="/">Home</a>
+            <a className="site-nav-link" href="/properties">Properties</a>
+            <a className="site-nav-link" href="/about">About Us</a>
           </nav>
         </div>
       </header>
@@ -1141,7 +2013,474 @@ function App() {
             </form>
           </section>
         </div>
+      </main>
 
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <p className="site-footer-name">Al Qaim Estate</p>
+          <p>Office 12, Al Qaim Business Center</p>
+          <p>Main Boulevard, Lahore, Pakistan</p>
+          <p>+92 300 1234567</p>
+
+          <div className="site-footer-social" aria-label="Al Qaim Estate on social media">
+            <button type="button" className="site-footer-social-link" aria-label="Facebook" title="Facebook">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M13.5 21v-7.6h2.55l.38-2.96h-2.93v-1.9c0-.86.24-1.44 1.47-1.44h1.57V4.42c-.27-.04-1.2-.12-2.28-.12-2.26 0-3.8 1.38-3.8 3.9v2.18H8v2.96h2.46V21h3.04z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8zm0 5.6a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4zm4.55-5.74a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0zM20 8.05c-.05-1.06-.29-2-1.06-2.77-.77-.77-1.71-1-2.77-1.06C15.05 4.16 8.95 4.16 7.83 4.22c-1.06.05-2 .29-2.77 1.06-.77.77-1 1.71-1.06 2.77C4 9.17 4 15.27 4 15.27c.05 1.06.29 2 1.06 2.77.77.77 1.71 1 2.77 1.06 1.12.06 7.22.06 8.34 0 1.06-.05 2-.29 2.77-1.06.77-.77 1-1.71 1.06-2.77.06-1.12.06-7.22 0-8.34zM18.32 16.9a2.44 2.44 0 0 1-1.42 1.42c-.98.39-3.32.3-4.4.3s-3.42.09-4.4-.3a2.44 2.44 0 0 1-1.42-1.42c-.39-.98-.3-3.32-.3-4.4s-.09-3.42.3-4.4A2.44 2.44 0 0 1 8.1 6.68c.98-.39 3.32-.3 4.4-.3s3.42-.09 4.4.3a2.44 2.44 0 0 1 1.42 1.42c.39.98.3 3.32.3 4.4s.09 3.42-.3 4.4z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="LinkedIn" title="LinkedIn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M6.94 8.5H4.06V20h2.88V8.5zM5.5 4c-.97 0-1.75.79-1.75 1.75 0 .96.78 1.75 1.75 1.75s1.75-.79 1.75-1.75C7.25 4.79 6.47 4 5.5 4zM20 13.4c0-3.06-1.63-4.49-3.81-4.49-1.76 0-2.54.97-2.98 1.65V8.5H10.34c.04.85 0 11.5 0 11.5h2.87v-6.42c0-.34.02-.69.12-.94.27-.69.89-1.4 1.93-1.4 1.36 0 1.91 1.03 1.91 2.55V20H20v-6.6z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="YouTube" title="YouTube">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M21.6 7.6a2.75 2.75 0 0 0-1.94-1.95C18 5.2 12 5.2 12 5.2s-6 0-7.66.45A2.75 2.75 0 0 0 2.4 7.6 28.6 28.6 0 0 0 2 12a28.6 28.6 0 0 0 .4 4.4 2.75 2.75 0 0 0 1.94 1.95c1.66.45 7.66.45 7.66.45s6 0 7.66-.45a2.75 2.75 0 0 0 1.94-1.95c.27-1.45.4-2.92.4-4.4a28.6 28.6 0 0 0-.4-4.4zM10 14.9V9.1l5.2 2.9-5.2 2.9z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+const initialPropertyFiltersState = {
+  minBudget: '',
+  maxBudget: '',
+  propertyType: '',
+  location: '',
+  bedrooms: '',
+  status: '',
+};
+
+function PropertiesPage() {
+  const [publicProperties, setPublicProperties] = useState([]);
+  const [publicPropertiesLoading, setPublicPropertiesLoading] = useState(true);
+  const [publicPropertiesError, setPublicPropertiesError] = useState('');
+  const [propertyImageIndexes, setPropertyImageIndexes] = useState({});
+  const [propertyFilters, setPropertyFilters] = useState(initialPropertyFiltersState);
+
+  function handlePropertyFilterChange(event) {
+    const { name, value } = event.target;
+
+    setPropertyFilters((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  function handleClearPropertyFilters() {
+    setPropertyFilters(initialPropertyFiltersState);
+  }
+
+  function showPreviousPropertyImage(propertyId, imageCount) {
+    setPropertyImageIndexes((previous) => {
+      const currentIndex = previous[propertyId] ?? 0;
+      const nextIndex = (currentIndex - 1 + imageCount) % imageCount;
+      return { ...previous, [propertyId]: nextIndex };
+    });
+  }
+
+  function showNextPropertyImage(propertyId, imageCount) {
+    setPropertyImageIndexes((previous) => {
+      const currentIndex = previous[propertyId] ?? 0;
+      const nextIndex = (currentIndex + 1) % imageCount;
+      return { ...previous, [propertyId]: nextIndex };
+    });
+  }
+
+  useEffect(() => {
+    async function loadPublicProperties() {
+      setPublicPropertiesLoading(true);
+      setPublicPropertiesError('');
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/properties`);
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error('Failed to load properties.');
+        }
+
+        setPublicProperties(data || []);
+      } catch (requestError) {
+        setPublicPropertiesError(
+          requestError.message || 'Failed to load properties.'
+        );
+      } finally {
+        setPublicPropertiesLoading(false);
+      }
+    }
+
+    loadPublicProperties();
+  }, []);
+
+  const propertyTypeOptions = [
+    ...new Set(publicProperties.map((property) => property.property_type).filter(Boolean)),
+  ];
+  const locationOptions = [
+    ...new Set(publicProperties.map((property) => property.location).filter(Boolean)),
+  ];
+  const statusOptions = [
+    ...new Set(publicProperties.map((property) => property.status).filter(Boolean)),
+  ];
+
+  const filteredProperties = publicProperties.filter((property) => {
+    if (
+      propertyFilters.minBudget !== '' &&
+      !(Number(property.price) >= Number(propertyFilters.minBudget))
+    ) {
+      return false;
+    }
+
+    if (
+      propertyFilters.maxBudget !== '' &&
+      !(Number(property.price) <= Number(propertyFilters.maxBudget))
+    ) {
+      return false;
+    }
+
+    if (
+      propertyFilters.propertyType &&
+      property.property_type !== propertyFilters.propertyType
+    ) {
+      return false;
+    }
+
+    if (propertyFilters.location && property.location !== propertyFilters.location) {
+      return false;
+    }
+
+    if (propertyFilters.bedrooms !== '') {
+      if (property.bedrooms === null || property.bedrooms === undefined) {
+        return false;
+      }
+
+      if (!(property.bedrooms >= Number(propertyFilters.bedrooms))) {
+        return false;
+      }
+    }
+
+    if (propertyFilters.status && property.status !== propertyFilters.status) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return (
+    <>
+      <header className="site-header">
+        <div className="site-header-inner">
+          <div className="site-brand">
+            <span className="site-brand-name">Al Qaim Estate</span>
+            <span className="site-brand-subtitle">FOR REAL ESTATE BUSINESSES</span>
+          </div>
+
+          <nav className="site-nav" aria-label="Primary">
+            <a className="site-nav-link" href="/">Home</a>
+            <a className="site-nav-link" href="/properties">Properties</a>
+            <a className="site-nav-link" href="/about">About Us</a>
+          </nav>
+        </div>
+      </header>
+
+      <main className="app-shell">
+        <section className="public-properties-section">
+          <p className="eyebrow">OUR PROPERTIES</p>
+          <h2>Explore Our Property Opportunities</h2>
+
+          {publicPropertiesLoading && <p>Loading properties...</p>}
+
+          {!publicPropertiesLoading && publicPropertiesError && (
+            <p className="error-banner">{publicPropertiesError}</p>
+          )}
+
+          {!publicPropertiesLoading &&
+            !publicPropertiesError &&
+            publicProperties.length === 0 && (
+              <p>No properties available at the moment.</p>
+            )}
+
+          {!publicPropertiesLoading &&
+            !publicPropertiesError &&
+            publicProperties.length > 0 && (
+              <>
+                <div className="public-property-filters">
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-min-budget">Minimum Budget</label>
+                    <input
+                      id="property-filter-min-budget"
+                      type="number"
+                      name="minBudget"
+                      min="0"
+                      value={propertyFilters.minBudget}
+                      onChange={handlePropertyFilterChange}
+                      placeholder="No minimum"
+                    />
+                  </div>
+
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-max-budget">Maximum Budget</label>
+                    <input
+                      id="property-filter-max-budget"
+                      type="number"
+                      name="maxBudget"
+                      min="0"
+                      value={propertyFilters.maxBudget}
+                      onChange={handlePropertyFilterChange}
+                      placeholder="No maximum"
+                    />
+                  </div>
+
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-type">Property Type</label>
+                    <select
+                      id="property-filter-type"
+                      name="propertyType"
+                      value={propertyFilters.propertyType}
+                      onChange={handlePropertyFilterChange}
+                    >
+                      <option value="">All Property Types</option>
+                      {propertyTypeOptions.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-location">Location</label>
+                    <select
+                      id="property-filter-location"
+                      name="location"
+                      value={propertyFilters.location}
+                      onChange={handlePropertyFilterChange}
+                    >
+                      <option value="">All Locations</option>
+                      {locationOptions.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-bedrooms">Bedrooms</label>
+                    <select
+                      id="property-filter-bedrooms"
+                      name="bedrooms"
+                      value={propertyFilters.bedrooms}
+                      onChange={handlePropertyFilterChange}
+                    >
+                      <option value="">Any Bedrooms</option>
+                      <option value="1">1+ Bedrooms</option>
+                      <option value="2">2+ Bedrooms</option>
+                      <option value="3">3+ Bedrooms</option>
+                      <option value="4">4+ Bedrooms</option>
+                    </select>
+                  </div>
+
+                  <div className="public-property-filter-field">
+                    <label htmlFor="property-filter-status">Availability</label>
+                    <select
+                      id="property-filter-status"
+                      name="status"
+                      value={propertyFilters.status}
+                      onChange={handlePropertyFilterChange}
+                    >
+                      <option value="">All Statuses</option>
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="public-property-filter-actions">
+                    <button
+                      type="button"
+                      className="public-property-filter-clear-button"
+                      onClick={handleClearPropertyFilters}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+
+                <p className="public-property-results-count">
+                  {filteredProperties.length}{' '}
+                  {filteredProperties.length === 1 ? 'property' : 'properties'} found
+                </p>
+
+                {filteredProperties.length === 0 ? (
+                  <p>No properties match your current filters.</p>
+                ) : (
+                  <ul className="public-properties-list">
+                {filteredProperties.map((property) => (
+                  <li className="public-property-item" key={property.id}>
+                    {(() => {
+                      const orderedImages = getOrderedPropertyImages(property);
+
+                      if (orderedImages.length === 0) {
+                        return null;
+                      }
+
+                      const currentIndex = propertyImageIndexes[property.id] ?? 0;
+                      const currentImage =
+                        orderedImages[currentIndex] || orderedImages[0];
+
+                      return (
+                        <div className="public-property-carousel">
+                          <img
+                            className="public-property-carousel-image"
+                            src={currentImage.image_url}
+                            alt={property.title}
+                          />
+
+                          {orderedImages.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                className="public-property-carousel-button public-property-carousel-button-previous"
+                                onClick={() =>
+                                  showPreviousPropertyImage(
+                                    property.id,
+                                    orderedImages.length
+                                  )
+                                }
+                                aria-label="Previous image"
+                              >
+                                ‹
+                              </button>
+
+                              <button
+                                type="button"
+                                className="public-property-carousel-button public-property-carousel-button-next"
+                                onClick={() =>
+                                  showNextPropertyImage(
+                                    property.id,
+                                    orderedImages.length
+                                  )
+                                }
+                                aria-label="Next image"
+                              >
+                                ›
+                              </button>
+
+                              <div className="public-property-carousel-dots">
+                                {orderedImages.map((image, index) => (
+                                  <button
+                                    type="button"
+                                    key={image.id ?? index}
+                                    className={`public-property-carousel-dot${
+                                      index === currentIndex ? ' active' : ''
+                                    }`}
+                                    onClick={() =>
+                                      setPropertyImageIndexes((previous) => ({
+                                        ...previous,
+                                        [property.id]: index,
+                                      }))
+                                    }
+                                    aria-label={`Show image ${index + 1}`}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    <div className="public-property-body">
+                      <h3 className="public-property-title">{property.title}</h3>
+                      <p className="public-property-meta">{property.property_type}</p>
+                      <p className="public-property-meta">{property.location}</p>
+                      <p className="public-property-price">
+                        {property.currency} {property.price}
+                      </p>
+                      <span className="public-property-status-badge">
+                        {property.status}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+                  </ul>
+                )}
+              </>
+            )}
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <p className="site-footer-name">Al Qaim Estate</p>
+          <p>Office 12, Al Qaim Business Center</p>
+          <p>Main Boulevard, Lahore, Pakistan</p>
+          <p>+92 300 1234567</p>
+
+          <div className="site-footer-social" aria-label="Al Qaim Estate on social media">
+            <button type="button" className="site-footer-social-link" aria-label="Facebook" title="Facebook">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M13.5 21v-7.6h2.55l.38-2.96h-2.93v-1.9c0-.86.24-1.44 1.47-1.44h1.57V4.42c-.27-.04-1.2-.12-2.28-.12-2.26 0-3.8 1.38-3.8 3.9v2.18H8v2.96h2.46V21h3.04z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8zm0 5.6a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4zm4.55-5.74a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0zM20 8.05c-.05-1.06-.29-2-1.06-2.77-.77-.77-1.71-1-2.77-1.06C15.05 4.16 8.95 4.16 7.83 4.22c-1.06.05-2 .29-2.77 1.06-.77.77-1 1.71-1.06 2.77C4 9.17 4 15.27 4 15.27c.05 1.06.29 2 1.06 2.77.77.77 1.71 1 2.77 1.06 1.12.06 7.22.06 8.34 0 1.06-.05 2-.29 2.77-1.06.77-.77 1-1.71 1.06-2.77.06-1.12.06-7.22 0-8.34zM18.32 16.9a2.44 2.44 0 0 1-1.42 1.42c-.98.39-3.32.3-4.4.3s-3.42.09-4.4-.3a2.44 2.44 0 0 1-1.42-1.42c-.39-.98-.3-3.32-.3-4.4s-.09-3.42.3-4.4A2.44 2.44 0 0 1 8.1 6.68c.98-.39 3.32-.3 4.4-.3s3.42-.09 4.4.3a2.44 2.44 0 0 1 1.42 1.42c.39.98.3 3.32.3 4.4s.09 3.42-.3 4.4z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="LinkedIn" title="LinkedIn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M6.94 8.5H4.06V20h2.88V8.5zM5.5 4c-.97 0-1.75.79-1.75 1.75 0 .96.78 1.75 1.75 1.75s1.75-.79 1.75-1.75C7.25 4.79 6.47 4 5.5 4zM20 13.4c0-3.06-1.63-4.49-3.81-4.49-1.76 0-2.54.97-2.98 1.65V8.5H10.34c.04.85 0 11.5 0 11.5h2.87v-6.42c0-.34.02-.69.12-.94.27-.69.89-1.4 1.93-1.4 1.36 0 1.91 1.03 1.91 2.55V20H20v-6.6z" />
+              </svg>
+            </button>
+
+            <button type="button" className="site-footer-social-link" aria-label="YouTube" title="YouTube">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                <path d="M21.6 7.6a2.75 2.75 0 0 0-1.94-1.95C18 5.2 12 5.2 12 5.2s-6 0-7.66.45A2.75 2.75 0 0 0 2.4 7.6 28.6 28.6 0 0 0 2 12a28.6 28.6 0 0 0 .4 4.4 2.75 2.75 0 0 0 1.94 1.95c1.66.45 7.66.45 7.66.45s6 0 7.66-.45a2.75 2.75 0 0 0 1.94-1.95c.27-1.45.4-2.92.4-4.4a28.6 28.6 0 0 0-.4-4.4zM10 14.9V9.1l5.2 2.9-5.2 2.9z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
+
+function AboutPage() {
+  return (
+    <>
+      <header className="site-header">
+        <div className="site-header-inner">
+          <div className="site-brand">
+            <span className="site-brand-name">Al Qaim Estate</span>
+            <span className="site-brand-subtitle">FOR REAL ESTATE BUSINESSES</span>
+          </div>
+
+          <nav className="site-nav" aria-label="Primary">
+            <a className="site-nav-link" href="/">Home</a>
+            <a className="site-nav-link" href="/properties">Properties</a>
+            <a className="site-nav-link" href="/about">About Us</a>
+          </nav>
+        </div>
+      </header>
+
+      <main className="app-shell">
         <section className="about-section" id="about">
           <p className="eyebrow">ABOUT AL QAIM ESTATE</p>
           <h2 className="about-heading">Helping You Find the Right Real Estate Opportunity</h2>
@@ -1156,7 +2495,7 @@ function App() {
             opportunities simple, transparent, and straightforward — from the first conversation
             to finding an opportunity that feels right for you.
           </p>
-          <a className="submit-button about-cta" href="#hero">Explore Properties</a>
+          <a className="submit-button about-cta" href="/properties">Explore Properties</a>
         </section>
       </main>
 
@@ -1200,6 +2539,14 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {window.location.pathname === '/admin' ? <AdminDashboard /> : <App />}
+    {window.location.pathname === '/admin' ? (
+      <AdminDashboard />
+    ) : window.location.pathname === '/properties' ? (
+      <PropertiesPage />
+    ) : window.location.pathname === '/about' ? (
+      <AboutPage />
+    ) : (
+      <App />
+    )}
   </React.StrictMode>
 );
