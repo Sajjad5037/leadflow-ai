@@ -3,12 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 #from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.api.leads import router as leads_router
+from app.api.properties import router as properties_router
 from app.database import Base, engine
 #from app.services.followup_runner import process_due_followups
 from app.models.lead import Lead
 from app.models.lead_qualification import LeadQualification
 from app.models.followup import Followup
-
+from app.models.property import Property
+from app.models.property_image import PropertyImage
 
 app = FastAPI(title='LeadFlow AI API', version='0.1.0')
 
@@ -40,6 +42,7 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(leads_router)
+app.include_router(properties_router)
 
 
 @app.get('/health')
