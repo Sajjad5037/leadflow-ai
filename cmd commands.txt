@@ -1,4 +1,6 @@
-cd C:\Users\Admin\Documents\leadflow-ai\backend>
+cd C:\Users\Admin\Documents\leadflow-ai\backend
+set GOOGLE_APPLICATION_CREDENTIALS=C:\Users\Admin\Documents\leadflow-ai\backend\google credentials\krishchatbot-475214-c845c3517129.json
 ..\.venv-1\Scripts\activate
+set GOOGLE_APPLICATION_CREDENTIALS=C:\Users\Admin\Documents\leadflow-ai\backend\google credentials\krischatbot-475214-c845c3517129.json
 uvicorn app.main:app --reload
 

@@ -128,33 +128,6 @@ const MOCK_TEAM_PERFORMANCE = [
   { name: 'Priya Shah', initials: 'PS', assigned: 24, active: 9, won: 3, conversion: '27%' },
   { name: 'Daniel Reed', initials: 'DR', assigned: 22, active: 7, won: 1, conversion: '18%' },
 ];
-const initialMockEmployees = [
-    {
-      id: 1,
-      name: 'Amelia Hart',
-      email: 'amelia.hart@example.com',
-      role: 'Sales Agent',
-    },
-    {
-      id: 2,
-      name: 'Marcus Cole',
-      email: 'marcus.cole@example.com',
-      role: 'Sales Agent',
-    },
-    {
-      id: 3,
-      name: 'Priya Shah',
-      email: 'priya.shah@example.com',
-      role: 'Sales Agent',
-    },
-    {
-      id: 4,
-      name: 'Daniel Reed',
-      email: 'daniel.reed@example.com',
-      role: 'Sales Agent',
-    },
-  ];
-
 const PROPERTY_TYPE_OPTIONS = ['APARTMENT', 'VILLA', 'PLOT', 'COMMERCIAL', 'HOUSE', 'OTHER'];
 const PROPERTY_STATUS_OPTIONS = ['AVAILABLE', 'RESERVED', 'SOLD', 'OFF_MARKET'];
 
@@ -280,10 +253,18 @@ function AdminDashboard() {
   const [leads, setLeads] = useState([]);
   const [activeTab, setActiveTab] = useState('leads');
   const [isLoading, setIsLoading] = useState(true);
-  const [employees, setEmployees] = useState(initialMockEmployees);
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
+  const [employeesError, setEmployeesError] = useState('');
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [newEmployeeName, setNewEmployeeName] = useState('');
   const [newEmployeeEmail, setNewEmployeeEmail] = useState('');
+  const [employeeFormSubmitting, setEmployeeFormSubmitting] = useState(false);
+  const [employeeFormError, setEmployeeFormError] = useState('');
+  const [editingEmployeeId, setEditingEmployeeId] = useState(null);
+  const [editEmployeeForm, setEditEmployeeForm] = useState(null);
+  const [editEmployeeSubmitting, setEditEmployeeSubmitting] = useState(false);
+  const [editEmployeeError, setEditEmployeeError] = useState('');
   const [error, setError] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [followups, setFollowups] = useState([]);
@@ -332,6 +313,30 @@ function AdminDashboard() {
     }
 
     loadLeads();
+  }, []);
+
+  useEffect(() => {
+    async function loadEmployees() {
+      setEmployeesLoading(true);
+      setEmployeesError('');
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/employees`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error('Failed to load employees.');
+        }
+
+        setEmployees(data);
+      } catch (requestError) {
+        setEmployeesError(requestError.message || 'Failed to load employees.');
+      } finally {
+        setEmployeesLoading(false);
+      }
+    }
+
+    loadEmployees();
   }, []);
 
   useEffect(() => {
@@ -514,7 +519,7 @@ async function handleProcessFollowup(followupId) {
       setIsSchedulingFollowup(false);
     }
   }
-  function handleAddEmployee(event) {
+  async function handleAddEmployee(event) {
     event.preventDefault();
 
     const name = newEmployeeName.trim();
@@ -524,21 +529,162 @@ async function handleProcessFollowup(followupId) {
       return;
     }
 
-    const newEmployee = {
-      id: Date.now(),
-      name,
-      email,
-      role: 'Sales Agent',
-    };
+    setEmployeeFormSubmitting(true);
+    setEmployeeFormError('');
 
-    setEmployees((previousEmployees) => [
-      ...previousEmployees,
-      newEmployee,
-    ]);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          role: 'Sales Agent',
+          is_active: true,
+        }),
+      });
 
-    setNewEmployeeName('');
-    setNewEmployeeEmail('');
-    setShowEmployeeForm(false);
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to add employee.';
+        throw new Error(message);
+      }
+
+      setEmployees((previousEmployees) => [...previousEmployees, data]);
+
+      setNewEmployeeName('');
+      setNewEmployeeEmail('');
+      setShowEmployeeForm(false);
+    } catch (requestError) {
+      setEmployeeFormError(requestError.message || 'Failed to add employee.');
+    } finally {
+      setEmployeeFormSubmitting(false);
+    }
+  }
+
+  function handleStartEditEmployee(employee) {
+    setEditingEmployeeId(employee.id);
+    setEditEmployeeForm({
+      name: employee.name,
+      email: employee.email,
+      role: employee.role,
+      is_active: employee.is_active,
+    });
+    setEditEmployeeError('');
+  }
+
+  function handleCancelEditEmployee() {
+    setEditingEmployeeId(null);
+    setEditEmployeeForm(null);
+    setEditEmployeeError('');
+  }
+
+  function handleEditEmployeeFieldChange(event) {
+    const { name, value, type, checked } = event.target;
+
+    setEditEmployeeForm((previous) => ({
+      ...previous,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  }
+
+  async function handleSaveEmployee(employeeId) {
+    if (!editEmployeeForm) {
+      return;
+    }
+
+    const name = editEmployeeForm.name.trim();
+    const email = editEmployeeForm.email.trim();
+
+    if (!name || !email) {
+      setEditEmployeeError('Name and email are required.');
+      return;
+    }
+
+    setEditEmployeeSubmitting(true);
+    setEditEmployeeError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          role: editEmployeeForm.role,
+          is_active: editEmployeeForm.is_active,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to update employee.';
+        throw new Error(message);
+      }
+
+      setEmployees((previousEmployees) =>
+        previousEmployees.map((item) => (item.id === employeeId ? data : item))
+      );
+
+      setEditingEmployeeId(null);
+      setEditEmployeeForm(null);
+    } catch (requestError) {
+      setEditEmployeeError(requestError.message || 'Failed to update employee.');
+    } finally {
+      setEditEmployeeSubmitting(false);
+    }
+  }
+
+  async function handleDeleteEmployee(employeeId) {
+    const confirmed = window.confirm('Are you sure you want to delete this employee?');
+
+    if (!confirmed) {
+      return;
+    }
+
+    setEmployeesError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees/${employeeId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Failed to delete employee.';
+        throw new Error(message);
+      }
+
+      setEmployees((previousEmployees) =>
+        previousEmployees.filter((item) => item.id !== employeeId)
+      );
+
+      if (editingEmployeeId === employeeId) {
+        setEditingEmployeeId(null);
+        setEditEmployeeForm(null);
+      }
+    } catch (requestError) {
+      setEmployeesError(requestError.message || 'Failed to delete employee.');
+    }
   }
 
   function handlePropertyFieldChange(event) {
@@ -1004,6 +1150,7 @@ async function handleProcessFollowup(followupId) {
                         value={newEmployeeName}
                         onChange={(event) => setNewEmployeeName(event.target.value)}
                         placeholder="Employee name"
+                        disabled={employeeFormSubmitting}
                       />
                     </div>
 
@@ -1015,12 +1162,17 @@ async function handleProcessFollowup(followupId) {
                         value={newEmployeeEmail}
                         onChange={(event) => setNewEmployeeEmail(event.target.value)}
                         placeholder="Employee email"
+                        disabled={employeeFormSubmitting}
                       />
                     </div>
 
-                    <button type="submit" className="command-add-button">
-                      Add Employee
+                    <button type="submit" className="command-add-button" disabled={employeeFormSubmitting}>
+                      {employeeFormSubmitting ? 'Adding...' : 'Add Employee'}
                     </button>
+
+                    {employeeFormError && (
+                      <p className="error-banner">{employeeFormError}</p>
+                    )}
                   </form>
                 )}
 
@@ -1030,43 +1182,130 @@ async function handleProcessFollowup(followupId) {
                     <small>{employees.length} members</small>
                   </div>
 
-                  {employees.map((employee) => (
-                    <div className="command-employee-member" key={employee.id}>
-                      <span className="command-team-avatar">
-                        {employee.name
-                          .split(' ')
-                          .map((part) => part[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </span>
+                  {employeesLoading && <p>Loading employees...</p>}
 
-                      <div className="command-employee-info">
-                        <strong>{employee.name}</strong>
-                        <span>{employee.email}</span>
+                  {employeesError && <p className="error-banner">{employeesError}</p>}
+
+                  {!employeesLoading && !employeesError && employees.length === 0 && (
+                    <p>No employees found.</p>
+                  )}
+
+                  {employees.map((employee) => {
+                    const isEditingEmployee = editingEmployeeId === employee.id;
+
+                    return (
+                      <div className="command-employee-member" key={employee.id}>
+                        <span className="command-team-avatar">
+                          {employee.name
+                            .split(' ')
+                            .map((part) => part[0])
+                            .join('')
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </span>
+
+                        {isEditingEmployee ? (
+                          <>
+                            <div className="command-employee-info">
+                              <input
+                                type="text"
+                                name="name"
+                                value={editEmployeeForm.name}
+                                onChange={handleEditEmployeeFieldChange}
+                                disabled={editEmployeeSubmitting}
+                              />
+                              <input
+                                type="email"
+                                name="email"
+                                value={editEmployeeForm.email}
+                                onChange={handleEditEmployeeFieldChange}
+                                disabled={editEmployeeSubmitting}
+                              />
+                            </div>
+
+                            <input
+                              type="text"
+                              name="role"
+                              className="command-employee-role"
+                              value={editEmployeeForm.role}
+                              onChange={handleEditEmployeeFieldChange}
+                              disabled={editEmployeeSubmitting}
+                            />
+
+                            <label>
+                              <input
+                                type="checkbox"
+                                name="is_active"
+                                checked={editEmployeeForm.is_active}
+                                onChange={handleEditEmployeeFieldChange}
+                                disabled={editEmployeeSubmitting}
+                              />
+                              {' '}Active
+                            </label>
+
+                            <div className="command-employee-actions">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEmployee(employee.id)}
+                                disabled={editEmployeeSubmitting}
+                              >
+                                {editEmployeeSubmitting ? 'Saving...' : 'Save'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleCancelEditEmployee}
+                                disabled={editEmployeeSubmitting}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+
+                            {editEmployeeError && (
+                              <p className="error-banner">{editEmployeeError}</p>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="command-employee-info">
+                              <strong>{employee.name}</strong>
+                              <span>{employee.email}</span>
+                            </div>
+
+                            <span className="command-employee-role">
+                              {employee.role}
+                            </span>
+
+                            <span
+                              className={`property-badge ${
+                                employee.is_active
+                                  ? 'property-badge-featured'
+                                  : 'property-badge-not-featured'
+                              }`}
+                            >
+                              {employee.is_active ? 'Active' : 'Inactive'}
+                            </span>
+
+                            <div className="command-employee-actions">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditEmployee(employee)}
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteEmployee(employee.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-
-                      <span className="command-employee-role">
-                        {employee.role}
-                      </span>
-
-                      <div className="command-employee-actions">
-                        <button
-                          type="button"
-                          onClick={() => console.log('Edit employee:', employee.id)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => console.log('Delete employee:', employee.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                   </section>
                 )}

@@ -1,0 +1,13 @@
+1. Start Docker Desktop: Open Docker Desktop from Windows and wait until Docker has fully started. 
+
+2. Open Command Prompt: Run docker ps to check whether your n8n container is already running. If you see leadflow-n8n with 0.0.0.0:5678->5678/tcp, n8n is already running and you can skip to Step 4.
+
+ 3. If n8n is not running: Run docker ps -a, find the container named leadflow-n8n, and start it with docker start leadflow-n8n; then run docker ps again to confirm that leadflow-n8n is running
+
+ 4. Open n8n: Open Chrome and go to http://localhost:5678; this opens your locally running n8n.
+ 
+5. Open your workflow: In n8n, open My workflow, which currently contains Schedule Trigger → HTTP Request → HTTP Request1.
+
+ 6. When finished: You can simply close the browser, or stop n8n completely with docker stop leadflow-n8n. The next time you need it, just run docker start leadflow-n8n; you do not need to reinstall n8n or create the container again.
+
+ Useful commands: docker ps = see running containers; docker ps -a = see all containers; docker start leadflow-n8n = start your existing n8n; docker stop leadflow-n8n = stop n8n. Your important container for this project is leadflow-n8n; the other full-stack-fastapi-template-* containers you saw are from an older project and don't need to be started for n8n.
