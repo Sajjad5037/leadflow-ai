@@ -249,6 +249,290 @@ function getOrderedPropertyImages(property) {
   return [...primaryImages, ...otherImages];
 }
 
+function AdminLogin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const body = new URLSearchParams();
+      body.set('username', email);
+      body.set('password', password);
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: body.toString(),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Invalid email or password.';
+        throw new Error(message);
+      }
+
+      localStorage.setItem('access_token', data.access_token);
+      window.location.reload();
+    } catch (requestError) {
+      setError(requestError.message || 'Invalid email or password.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
+        <section className="form-card" style={{ width: '100%' }}>
+          <div className="form-header">
+            <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
+            <h2>Admin Login</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <label>
+              <span>Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="admin@example.com"
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label>
+              <span>Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <button type="submit" className="submit-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </button>
+
+            {error && <p className="error-banner">{error}</p>}
+          </form>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function SalesLogin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const body = new URLSearchParams();
+      body.set('username', email);
+      body.set('password', password);
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: body.toString(),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const message =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'Invalid email or password.';
+        throw new Error(message);
+      }
+
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('sales_user_name', 'Sajjad');
+      window.location.reload();
+    } catch (requestError) {
+      setError(requestError.message || 'Invalid email or password.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
+        <section className="form-card" style={{ width: '100%' }}>
+          <div className="form-header">
+            <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
+            <h2>Sales Login</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <label>
+              <span>Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="sales.agent@example.com"
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label>
+              <span>Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <button type="submit" className="submit-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </button>
+
+            {error && <p className="error-banner">{error}</p>}
+          </form>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function SalesWelcome() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadMyLeads() {
+      setLoading(true);
+      setError('');
+
+      try {
+        const token = localStorage.getItem('access_token');
+
+        const response = await fetch(`${API_BASE_URL}/api/sales/my-leads`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error('Unable to load your leads.');
+        }
+
+        setLeads(data || []);
+      } catch (requestError) {
+        setError('Unable to load your leads.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMyLeads();
+  }, []);
+
+  return (
+    <main className="app-shell">
+      <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
+        <section className="form-card" style={{ width: '100%' }}>
+          <div className="form-header">
+            <p className="form-kicker">Al Qaim Estate</p>
+            <h2>Welcome, Sajjad!</h2>
+          </div>
+
+          {loading && <p>Loading your leads...</p>}
+
+          {!loading && error && <p className="error-banner">{error}</p>}
+
+          {!loading && !error && leads.length === 0 && (
+            <p>No leads are currently assigned to you.</p>
+          )}
+
+          {!loading && !error && leads.length > 0 && (
+            <>
+              <h3>My Leads</h3>
+
+              {leads.map((lead) => (
+                <details className="lead-details-section" key={lead.id}>
+                  <summary style={{ cursor: 'pointer', fontWeight: '600' }}>
+                    {lead.name}
+                  </summary>
+
+                  <div style={{ marginTop: '16px' }}>
+                    <div>{lead.company || '—'}</div>
+
+                    <div style={{ marginTop: '10px' }}>
+                      Email: {lead.email || '—'}
+                    </div>
+
+                    <div style={{ marginTop: '8px' }}>
+                      Phone: {lead.phone || '—'}
+                    </div>
+
+                    <div style={{ marginTop: '8px' }}>
+                      Score: {lead.qualification?.score ?? '—'}
+                    </div>
+
+                    <div style={{ marginTop: '8px' }}>
+                      Temperature: {lead.qualification?.temperature || '—'}
+                    </div>
+
+                    <div style={{ marginTop: '8px' }}>
+                      Status: {lead.status || '—'}
+                    </div>
+
+                    {lead.admin_message && (
+                      <div style={{ marginTop: '16px' }}>
+                        <strong>Message from Admin:</strong>
+                        <div style={{ marginTop: '6px' }}>
+                          {lead.admin_message}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
+
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
   const [activeTab, setActiveTab] = useState('leads');
@@ -267,6 +551,10 @@ function AdminDashboard() {
   const [editEmployeeError, setEditEmployeeError] = useState('');
   const [error, setError] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
+  const [assignmentEmployeeId, setAssignmentEmployeeId] = useState('');
+  const [assignmentNurtureEnabled, setAssignmentNurtureEnabled] = useState(false);
+  const [assignmentSubmitting, setAssignmentSubmitting] = useState(false);
+  const [assignmentError, setAssignmentError] = useState('');
   const [followups, setFollowups] = useState([]);
   const [followupsLoading, setFollowupsLoading] = useState(false);
   const [followupScheduledAt, setFollowupScheduledAt] = useState('');
@@ -369,6 +657,21 @@ function AdminDashboard() {
   }
 
   loadFollowups();
+}, [selectedLead]);
+useEffect(() => {
+  if (selectedLead) {
+    setAssignmentEmployeeId(
+      selectedLead.assigned_employee_id !== null && selectedLead.assigned_employee_id !== undefined
+        ? String(selectedLead.assigned_employee_id)
+        : ''
+    );
+    setAssignmentNurtureEnabled(Boolean(selectedLead.nurture_enabled));
+    setAssignmentError('');
+  } else {
+    setAssignmentEmployeeId('');
+    setAssignmentNurtureEnabled(false);
+    setAssignmentError('');
+  }
 }, [selectedLead]);
 useEffect(() => {
   async function loadUpcomingFollowups() {
@@ -519,6 +822,70 @@ async function handleProcessFollowup(followupId) {
       setIsSchedulingFollowup(false);
     }
   }
+  async function handleSaveLeadAssignment() {
+    if (!selectedLead) {
+      return;
+    }
+
+    setAssignmentSubmitting(true);
+    setAssignmentError('');
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/leads/${selectedLead.id}/assignment`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            assigned_employee_id:
+              assignmentEmployeeId === '' ? null : Number(assignmentEmployeeId),
+            nurture_enabled: assignmentNurtureEnabled,
+          }),
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail?.message || 'Failed to update lead assignment.'
+        );
+      }
+
+      setSelectedLead((previous) =>
+        previous
+          ? {
+              ...previous,
+              assigned_employee_id: data.assigned_employee_id,
+              nurture_enabled: data.nurture_enabled,
+            }
+          : previous
+      );
+
+      setLeads((previousLeads) =>
+        previousLeads.map((lead) =>
+          lead.id === selectedLead.id
+            ? {
+                ...lead,
+                assigned_employee_id: data.assigned_employee_id,
+                nurture_enabled: data.nurture_enabled,
+              }
+            : lead
+        )
+      );
+
+      setAssignmentError('');
+    } catch (requestError) {
+      setAssignmentError(
+        requestError.message || 'Failed to update lead assignment.'
+      );
+    } finally {
+      setAssignmentSubmitting(false);
+    }
+  }
+
   async function handleAddEmployee(event) {
     event.preventDefault();
 
@@ -1405,10 +1772,9 @@ async function handleProcessFollowup(followupId) {
                       <th>Score</th>
                       <th>Priority</th>
                       <th>Temperature</th>
-                      <th>Summary</th>
-                      <th>Reasoning</th>
-                      <th>Action Due</th>
                       <th>Follow-up</th>
+                      <th>Assigned To</th>
+                      <th>Nurture</th>
                     </tr>
                   </thead>
 
@@ -1421,6 +1787,9 @@ async function handleProcessFollowup(followupId) {
                         followups,
                         upcomingFollowups,
                         selectedLead
+                      );
+                      const assignedEmployee = employees.find(
+                        (employee) => employee.id === lead.assigned_employee_id
                       );
 
                       return (
@@ -1453,10 +1822,6 @@ async function handleProcessFollowup(followupId) {
                             )}
                           </td>
 
-                          <td>{lead.qualification?.summary ?? '—'}</td>
-                          <td>{lead.qualification?.reasoning ?? '—'}</td>
-                          <td>{lead.qualification?.recommended_action ?? '—'}</td>
-
                           <td>
                             <span
                               className={`lead-badge followup-${followupStatus
@@ -1464,6 +1829,20 @@ async function handleProcessFollowup(followupId) {
                                 .replace(/\s+/g, '-')}`}
                             >
                               {followupStatus}
+                            </span>
+                          </td>
+
+                          <td className="lead-assigned-cell">
+                            {assignedEmployee ? assignedEmployee.name : 'Unassigned'}
+                          </td>
+
+                          <td className="lead-nurture-cell">
+                            <span
+                              className={`lead-badge ${
+                                lead.nurture_enabled ? 'followup-sent' : 'followup-no-follow-up'
+                              }`}
+                            >
+                              {lead.nurture_enabled ? 'Nurturing' : 'Off'}
                             </span>
                           </td>
                         </tr>
@@ -1552,6 +1931,63 @@ async function handleProcessFollowup(followupId) {
                   <div className="lead-details-section">
                     <span>Recommended Action</span>
                     <p>{selectedLead.qualification?.recommended_action ?? '—'}</p>
+                  </div>
+
+                  <div className="lead-details-section lead-assignment-section">
+                    <span>Sales Assignment</span>
+
+                    <label className="lead-assignment-label">
+                      Assigned Salesperson
+                      <select
+                        className="lead-assignment-select"
+                        value={assignmentEmployeeId}
+                        onChange={(event) => setAssignmentEmployeeId(event.target.value)}
+                        disabled={assignmentSubmitting}
+                      >
+                        <option value="">Unassigned</option>
+                        {employees.map((employee) => {
+                          const isCurrentlyAssigned =
+                            String(employee.id) === assignmentEmployeeId;
+                          const isDisabled = !employee.is_active && !isCurrentlyAssigned;
+
+                          return (
+                            <option
+                              key={employee.id}
+                              value={employee.id}
+                              disabled={isDisabled}
+                            >
+                              {employee.is_active
+                                ? employee.name
+                                : `${employee.name} (Inactive)`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
+
+                    <label className="lead-nurture-toggle">
+                      <input
+                        type="checkbox"
+                        checked={assignmentNurtureEnabled}
+                        onChange={(event) => setAssignmentNurtureEnabled(event.target.checked)}
+                        disabled={assignmentSubmitting}
+                        className="lead-nurture-checkbox"
+                      />
+                      <span>Nurture this lead</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      className="submit-button lead-assignment-save"
+                      onClick={handleSaveLeadAssignment}
+                      disabled={assignmentSubmitting}
+                    >
+                      {assignmentSubmitting ? 'Saving...' : 'Save Assignment'}
+                    </button>
+
+                    {assignmentError && (
+                      <p className="error-banner">{assignmentError}</p>
+                    )}
                   </div>
 
                   <div className="lead-details-section">
@@ -2779,7 +3215,9 @@ function AboutPage() {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     {window.location.pathname === '/admin' ? (
-      <AdminDashboard />
+      localStorage.getItem('access_token') ? <AdminDashboard /> : <AdminLogin />
+    ) : window.location.pathname === '/sales' ? (
+      localStorage.getItem('access_token') ? <SalesWelcome /> : <SalesLogin />
     ) : window.location.pathname === '/properties' ? (
       <PropertiesPage />
     ) : window.location.pathname === '/about' ? (

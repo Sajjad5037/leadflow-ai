@@ -748,7 +748,7 @@ a.submit-button {
 
 .lead-table {
   width: 100%;
-  min-width: 1000px;
+  max-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -773,49 +773,14 @@ a.submit-button {
   font-size: 0.9rem;
 }
 
-.lead-table th:nth-child(1),
-.lead-table td:nth-child(1) {
-  width: 12%;
+.lead-assigned-cell {
+  min-width: 140px;
+  white-space: nowrap;
 }
 
-.lead-table th:nth-child(2),
-.lead-table td:nth-child(2) {
-  width: 12%;
-}
-
-.lead-table th:nth-child(3),
-.lead-table td:nth-child(3) {
-  width: 7%;
-}
-
-.lead-table th:nth-child(4),
-.lead-table td:nth-child(4) {
-  width: 9%;
-}
-
-.lead-table th:nth-child(5),
-.lead-table td:nth-child(5) {
-  width: 10%;
-}
-
-.lead-table th:nth-child(6),
-.lead-table td:nth-child(6) {
-  width: 18%;
-}
-
-.lead-table th:nth-child(7),
-.lead-table td:nth-child(7) {
-  width: 17%;
-}
-
-.lead-table th:nth-child(8),
-.lead-table td:nth-child(8) {
-  width: 13%;
-}
-
-.lead-table th:nth-child(9),
-.lead-table td:nth-child(9) {
-  width: 10%;
+.lead-nurture-cell {
+  min-width: 120px;
+  white-space: nowrap;
 }
 
 .lead-stats {
@@ -985,6 +950,92 @@ a.submit-button {
   margin: 0.45rem 0 0;
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.lead-assignment-section {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.lead-assignment-section > span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.lead-assignment-label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+.lead-assignment-select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lead-assignment-select:focus {
+  outline: none;
+  border-color: rgba(125, 211, 252, 0.9);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.lead-nurture-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lead-nurture-toggle span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-secondary);
+}
+
+.lead-nurture-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent-strong);
+}
+
+.lead-assignment-save {
+  width: fit-content;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.88rem;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+@media (max-width: 500px) {
+  .lead-assignment-label {
+    max-width: 100%;
+  }
+
+  .lead-assignment-save {
+    width: 100%;
+  }
 }
 
 @media (max-width: 800px) {
