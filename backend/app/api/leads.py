@@ -7,7 +7,16 @@ from app.models.lead import Lead
 from app.models.lead_qualification import LeadQualification
 from datetime import datetime
 from app.models.followup import Followup
-from app.schemas.lead import LeadCreateRequest, LeadCreateResponse, LeadListResponse, LeadResponse
+from app.models.employee import Employee
+from app.core.auth import get_current_user
+from app.models.user import User
+from app.schemas.lead import (
+    LeadAssignmentRequest,
+    LeadCreateRequest,
+    LeadCreateResponse,
+    LeadListResponse,
+    LeadResponse,
+)
 from app.schemas.followup import FollowupCreateRequest, FollowupResponse
 from app.services.email import send_email
 from app.services.followup_processor import process_followup as process_followup_service
@@ -114,7 +123,53 @@ def get_lead(lead_id: int, db: Session = Depends(get_db)):
         'status': lead.status,
         'created_at': lead.created_at,
         'updated_at': lead.updated_at,
+        'assigned_employee_id': lead.assigned_employee_id,
+        'nurture_enabled': lead.nurture_enabled,
         'qualification': qualification,
+    }
+
+
+@router.patch('/leads/{lead_id}/assignment')
+def update_lead_assignment(
+    lead_id: int,
+    payload: LeadAssignmentRequest,
+    db: Session = Depends(get_db),
+):
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+    if not lead:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={'message': f'Lead {lead_id} was not found.'},
+        )
+
+    if payload.assigned_employee_id is not None:
+        employee = db.query(Employee).filter(Employee.id == payload.assigned_employee_id).first()
+
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={'message': f'Employee {payload.assigned_employee_id} was not found.'},
+            )
+
+        if not employee.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={'message': f'Employee {payload.assigned_employee_id} is not active.'},
+            )
+
+    lead.assigned_employee_id = payload.assigned_employee_id
+    lead.nurture_enabled = payload.nurture_enabled
+    lead.admin_message = payload.admin_message
+
+    db.commit()
+    db.refresh(lead)
+
+    return {
+        'id': lead.id,
+        'assigned_employee_id': lead.assigned_employee_id,
+        'nurture_enabled': lead.nurture_enabled,
+        'admin_message': lead.admin_message,
     }
 
 
@@ -151,11 +206,65 @@ def get_leads(db: Session = Depends(get_db)):
             'status': lead.status,
             'created_at': lead.created_at,
             'updated_at': lead.updated_at,
+            'assigned_employee_id': lead.assigned_employee_id,
+            'nurture_enabled': lead.nurture_enabled,
             'qualification': qualification,
         })
 
     return results
-    
+
+
+@router.get('/sales/my-leads', response_model=list[LeadListResponse])
+def get_my_leads(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != 'Sales Agent':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'message': 'Sales Agent access required.'},
+        )
+
+    leads = (
+        db.query(Lead)
+        .outerjoin(LeadQualification, LeadQualification.lead_id == Lead.id)
+        .filter(Lead.assigned_employee_id == current_user.employee_id)
+        .order_by(
+            LeadQualification.score.desc().nullslast(),
+            Lead.created_at.desc(),
+        )
+        .all()
+    )
+
+    results = []
+
+    for lead in leads:
+        qualification = (
+            db.query(LeadQualification)
+            .filter(LeadQualification.lead_id == lead.id)
+            .order_by(LeadQualification.id.desc())
+            .first()
+        )
+
+        results.append({
+            'id': lead.id,
+            'name': lead.name,
+            'company': lead.company,
+            'email': lead.email,
+            'phone': lead.phone,
+            'business_problem': lead.business_problem,
+            'source': lead.source,
+            'status': lead.status,
+            'created_at': lead.created_at,
+            'updated_at': lead.updated_at,
+            'assigned_employee_id': lead.assigned_employee_id,
+            'nurture_enabled': lead.nurture_enabled,
+            'admin_message': lead.admin_message,
+            'qualification': qualification,
+        })
+
+    return results
+
 
 @router.get('/followups/upcoming', response_model=list[FollowupResponse])
 def get_upcoming_followups(db: Session = Depends(get_db)):

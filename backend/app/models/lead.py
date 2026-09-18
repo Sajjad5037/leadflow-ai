@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text,Column
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -26,3 +26,10 @@ class Lead(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
+    assigned_employee_id: Mapped[int | None] = mapped_column(
+        ForeignKey('employees.id'),
+        nullable=True,
+        index=True,
+    )
+    nurture_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    admin_message = Column(Text, nullable=True)

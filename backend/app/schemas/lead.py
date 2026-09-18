@@ -80,7 +80,15 @@ class LeadResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    assigned_employee_id: int | None = None
+    nurture_enabled: bool
     qualification: LeadQualificationResponse | None = None
+
+
+class LeadAssignmentRequest(BaseModel):
+    assigned_employee_id: int | None = None
+    nurture_enabled: bool = False
+    admin_message: str | None = None
 
 
 class LeadListResponse(BaseModel):
@@ -96,4 +104,7 @@ class LeadListResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    assigned_employee_id: int | None = None
+    nurture_enabled: bool
     qualification: LeadQualificationResponse | None = None
+    admin_message: str | None = None

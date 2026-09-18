@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.database import get_db
 from app.models.employee import Employee
+from app.models.user import User
 from app.schemas.employee import (
     EmployeeCreateRequest,
     EmployeeListResponse,
@@ -14,7 +16,10 @@ router = APIRouter(prefix='/api', tags=['employees'])
 
 
 @router.get('/employees', response_model=list[EmployeeListResponse])
-def get_employees(db: Session = Depends(get_db)):
+def get_employees(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     employees = (
         db.query(Employee)
         .order_by(Employee.created_at.desc())
