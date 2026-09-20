@@ -464,6 +464,12 @@ function SalesWelcome() {
     loadMyLeads();
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('sales_user_name');
+    window.location.reload();
+  };
+
   return (
     <main className="app-shell">
       <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
@@ -471,6 +477,30 @@ function SalesWelcome() {
           <div className="form-header">
             <p className="form-kicker">Al Qaim Estate</p>
             <h2>Welcome, Sajjad!</h2>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                marginTop: '16px',
+                padding: '10px 20px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              }}
+            >
+              Logout
+            </button>
           </div>
 
           {loading && <p>Loading your leads...</p>}
@@ -788,7 +818,7 @@ async function handleProcessFollowup(followupId) {
           body: JSON.stringify({
             lead_id: selectedLead.id,
             channel: 'EMAIL',
-            scheduled_at: followupScheduledAt,
+            scheduled_at: new Date(followupScheduledAt).toISOString(),
             attempt_number: 1,
           }),
         }
@@ -1372,6 +1402,12 @@ async function handleProcessFollowup(followupId) {
     (lead) => getPriority(lead.qualification?.score) === 'LOW'
   ).length;
 
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('sales_user_name');
+    window.location.reload();
+  };
+
   return (
     <main className="app-shell">
       <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '1200px' }}>
@@ -1426,14 +1462,40 @@ async function handleProcessFollowup(followupId) {
             </button>
           </nav>
           <div className="form-header command-center-header">
-            <div>
+            <div style={{ minWidth: 0, flex: '1 1 0' }}>
               <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
               <h2>Sales Command Center-Click on any lead to see its AI cmddetails</h2>
               <p className="command-center-subtitle">
                 A focused view of pipeline health, opportunity movement, and team momentum.
               </p>
             </div>
-            <span className="command-center-snapshot">Illustrative overview</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', maxWidth: '100%' }}>
+              <span className="command-center-snapshot">Illustrative overview</span>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           {activeTab === 'overview' && (
