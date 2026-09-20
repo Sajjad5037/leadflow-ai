@@ -1809,7 +1809,9 @@ async function handleProcessFollowup(followupId) {
                     <strong>{lead?.name ?? `Lead #${followup.lead_id}`}</strong>
                     <p>
                       {followup.channel} —{' '}
-                      {new Date(followup.scheduled_at).toLocaleString()}
+                      {new Date(`${followup.scheduled_at}Z`).toLocaleString(undefined, {
+                        timeZone: 'Asia/Karachi',
+                      })}
                     </p>
                     <p>Status: {followup.status}</p>
                     <p>Attempt: {followup.attempt_number}</p>
@@ -2062,23 +2064,41 @@ async function handleProcessFollowup(followupId) {
                     )}
 
                     {!followupsLoading && followups.length > 0 && (
-                      <div>
+                      <div className="followups-list">
                         {followups.map((followup) => (
-                          <div key={followup.id}>
-                            <strong>{followup.channel}</strong>
+                          <div className="followup-card" key={followup.id}>
+                            <div className="followup-card-header">
+                              <strong>{followup.channel}</strong>
 
-                            <p>
-                              Scheduled: {new Date(followup.scheduled_at).toLocaleString()}
-                            </p>
+                              <span
+                                className={`followup-status ${
+                                  followup.status === 'SENT'
+                                    ? 'followup-status-sent'
+                                    : 'followup-status-scheduled'
+                                }`}
+                              >
+                                {followup.status}
+                              </span>
+                            </div>
 
-                            <p>Status: {followup.status}</p>
+                            <div className="followup-card-details">
+                              <p>
+                                <span>Scheduled</span>
+                                {new Date(`${followup.scheduled_at}Z`).toLocaleString(undefined, {
+                                  timeZone: 'Asia/Karachi',
+                                })}
+                              </p>
 
-                            <p>Attempt: {followup.attempt_number}</p>
+                              <p>
+                                <span>Attempt</span>
+                                {followup.attempt_number}
+                              </p>
+                            </div>
 
                             {followup.status === 'SCHEDULED' && (
                               <button
                                 type="button"
-                                className="submit-button"
+                                className="submit-button followup-send-button"
                                 onClick={() => handleProcessFollowup(followup.id)}
                                 disabled={processingFollowupId === followup.id}
                               >
