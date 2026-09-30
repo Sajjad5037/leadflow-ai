@@ -1,3 +1,6 @@
+import logging
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -6,6 +9,7 @@ from app.database import get_db
 from app.models.lead import Lead
 from app.models.lead_qualification import LeadQualification
 from datetime import datetime
+from pydantic import BaseModel
 from app.models.followup import Followup
 from app.models.employee import Employee
 from app.core.auth import get_current_user
@@ -92,8 +96,129 @@ def create_lead(payload: LeadCreateRequest, db: Session = Depends(get_db)):
     lead.status = 'AI_QUALIFIED'
     db.commit()
 
+    try:
+        response = httpx.post(
+            'http://localhost:5678/webhook/al-qaim-lead',
+            json={
+                'lead_id': lead.id,
+                'name': lead.name,
+                'company': lead.company,
+                'email': lead.email,
+                'phone': lead.phone,
+                'source': lead.source,
+                'status': lead.status,
+                'qualification': {
+                    'score': qualification['score'],
+                    'temperature': get_lead_temperature(qualification['score']),
+                },
+            },
+        )
+        response.raise_for_status()
+    except httpx.HTTPError:
+        logging.getLogger(__name__).exception(
+            'Failed to notify n8n for lead %s.',
+            lead.id,
+        )
+
     return {'lead_id': lead.id, 'status': lead.status}
 
+class CRMContactSyncRequest(BaseModel):
+    crm_contact_id: int
+
+@router.post('/leads/{lead_id}/sync-crm')
+def sync_lead_to_crm(lead_id: int, db: Session = Depends(get_db)):
+    import asyncio
+    import logging
+
+    from app.services.crm_service import create_crm_contact
+
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+    if not lead:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={'message': f'Lead {lead_id} was not found.'},
+        )
+
+    if lead.crm_contact_id is not None:
+        return {
+            'lead_id': lead.id,
+            'crm_contact_id': lead.crm_contact_id,
+            'message': 'Lead is already synced with the CRM.',
+        }
+
+    try:
+        crm_contact = asyncio.run(create_crm_contact({
+            'name': lead.name,
+            'email': lead.email,
+            'phone': lead.phone,
+            'source': lead.source,
+        }))
+        crm_contact_id = crm_contact['id']
+    except Exception:
+        logging.getLogger(__name__).exception(
+            'Failed to synchronize lead %s with the CRM.',
+            lead.id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={'message': 'CRM synchronization failed.'},
+        )
+
+    lead.crm_contact_id = crm_contact_id
+    db.commit()
+
+    return {
+        'lead_id': lead.id,
+        'crm_contact_id': lead.crm_contact_id,
+        'message': 'Lead synchronized with the CRM successfully.',
+    }
+
+@router.patch('/leads/{lead_id}/crm-contact')
+def update_lead_crm_contact(
+    lead_id: int,
+    payload: CRMContactSyncRequest,
+    db: Session = Depends(get_db),
+):
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+
+    if not lead:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={'message': f'Lead {lead_id} was not found.'},
+        )
+
+    lead.crm_contact_id = payload.crm_contact_id
+    db.commit()
+    db.refresh(lead)
+
+    return {
+        'lead_id': lead.id,
+        'crm_contact_id': lead.crm_contact_id,
+        'message': 'CRM contact ID updated successfully.',
+    }
+
+@router.get('/leads/unsynced')
+def get_unsynced_leads(db: Session = Depends(get_db)):
+    leads = (
+        db.query(Lead)
+        .filter(Lead.crm_contact_id.is_(None))
+        .all()
+    )
+
+    return [
+        {
+            'id': lead.id,
+            'name': lead.name,
+            'email': lead.email,
+            'phone': lead.phone,
+            'company': lead.company,
+            'source': lead.source,
+            'status': lead.status,
+            'crm_contact_id': lead.crm_contact_id,
+        }
+        for lead in leads
+    ]
 
 @router.get('/leads/{lead_id}', response_model=LeadResponse)
 def get_lead(lead_id: int, db: Session = Depends(get_db)):
@@ -418,3 +543,34 @@ def process_followup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={'message': str(exc)},
         )
+
+
+@router.delete('/followups/{followup_id}')
+def delete_followup(
+    followup_id: int,
+    db: Session = Depends(get_db),
+):
+    followup = (
+        db.query(Followup)
+        .filter(Followup.id == followup_id)
+        .first()
+    )
+
+    if not followup:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={'message': f'Follow-up {followup_id} was not found.'},
+        )
+
+    if followup.status != 'SCHEDULED':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={'message': 'Only scheduled follow-ups can be deleted.'},
+        )
+
+    db.delete(followup)
+    db.commit()
+
+    return {
+        'message': f'Follow-up {followup_id} deleted successfully.'
+    }

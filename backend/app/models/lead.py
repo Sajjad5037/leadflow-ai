@@ -31,5 +31,9 @@ class Lead(Base):
         nullable=True,
         index=True,
     )
+    crm_contact_id: Mapped[int | None] = mapped_column(
+        nullable=True,
+        index=True,
+    )
     nurture_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     admin_message = Column(Text, nullable=True)

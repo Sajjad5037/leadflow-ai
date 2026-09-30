@@ -15,6 +15,7 @@ from app.models.property import Property
 from app.models.property_image import PropertyImage
 from app.models.employee import Employee
 from app.models.user import User
+from app.api.crm import router as crm_router
 
 app = FastAPI(title='LeadFlow AI API', version='0.1.0')
 
@@ -49,6 +50,7 @@ app.include_router(leads_router)
 app.include_router(properties_router)
 app.include_router(employees_router)
 app.include_router(auth_router)
+app.include_router(crm_router)
 
 
 @app.get('/health')
