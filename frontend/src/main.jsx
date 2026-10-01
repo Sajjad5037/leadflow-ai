@@ -592,6 +592,7 @@ function AdminDashboard() {
   const [followupError, setFollowupError] = useState('');
   const [upcomingFollowups, setUpcomingFollowups] = useState([]);
   const [processingFollowupId, setProcessingFollowupId] = useState(null);
+  const [deletingFollowupId, setDeletingFollowupId] = useState(null);
   const [upcomingFollowupsLoading, setUpcomingFollowupsLoading] = useState(true);
   const [properties, setProperties] = useState([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
@@ -796,6 +797,58 @@ async function handleProcessFollowup(followupId) {
     );
   } finally {
     setProcessingFollowupId(null);
+  }
+}
+async function handleDeleteFollowup(followupId) {
+  const confirmed = window.confirm(
+    'Are you sure you want to delete this follow-up?'
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setDeletingFollowupId(followupId);
+  setFollowupError('');
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/followups/${followupId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail?.message || 'Failed to delete follow-up.'
+      );
+    }
+
+    const followupsResponse = await fetch(
+      `${API_BASE_URL}/api/leads/${selectedLead.id}/followups`
+    );
+
+    const followupsData = await followupsResponse.json();
+
+    if (!followupsResponse.ok) {
+      throw new Error(
+        'Follow-up was deleted but could not be reloaded.'
+      );
+    }
+
+    setFollowups(followupsData);
+  } catch (requestError) {
+    setFollowupError(
+      requestError.message || 'Failed to delete follow-up.'
+    );
+  } finally {
+    setDeletingFollowupId(null);
   }
 }
   async function handleScheduleFollowup() {
@@ -2096,16 +2149,35 @@ async function handleProcessFollowup(followupId) {
                             </div>
 
                             {followup.status === 'SCHEDULED' && (
-                              <button
-                                type="button"
-                                className="submit-button followup-send-button"
-                                onClick={() => handleProcessFollowup(followup.id)}
-                                disabled={processingFollowupId === followup.id}
-                              >
-                                {processingFollowupId === followup.id
-                                  ? 'Sending...'
-                                  : 'Send Now'}
-                              </button>
+                              <div className="followup-actions">
+                                <button
+                                  type="button"
+                                  className="submit-button followup-send-button"
+                                  onClick={() => handleProcessFollowup(followup.id)}
+                                  disabled={
+                                    processingFollowupId === followup.id ||
+                                    deletingFollowupId === followup.id
+                                  }
+                                >
+                                  {processingFollowupId === followup.id
+                                    ? 'Sending...'
+                                    : 'Send Now'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="submit-button"
+                                  onClick={() => handleDeleteFollowup(followup.id)}
+                                  disabled={
+                                    processingFollowupId === followup.id ||
+                                    deletingFollowupId === followup.id
+                                  }
+                                >
+                                  {deletingFollowupId === followup.id
+                                    ? 'Deleting...'
+                                    : 'Delete'}
+                                </button>
+                              </div>
                             )}
                           </div>
                         ))}
