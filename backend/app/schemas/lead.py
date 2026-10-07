@@ -81,6 +81,7 @@ class LeadResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     assigned_employee_id: int | None = None
+    crm_contact_id: int | None = None
     nurture_enabled: bool
     qualification: LeadQualificationResponse | None = None
 

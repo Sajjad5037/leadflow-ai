@@ -249,6 +249,7 @@ def get_lead(lead_id: int, db: Session = Depends(get_db)):
         'created_at': lead.created_at,
         'updated_at': lead.updated_at,
         'assigned_employee_id': lead.assigned_employee_id,
+        'crm_contact_id': lead.crm_contact_id,
         'nurture_enabled': lead.nurture_enabled,
         'qualification': qualification,
     }
@@ -332,6 +333,7 @@ def get_leads(db: Session = Depends(get_db)):
             'created_at': lead.created_at,
             'updated_at': lead.updated_at,
             'assigned_employee_id': lead.assigned_employee_id,
+            'crm_contact_id': lead.crm_contact_id,
             'nurture_enabled': lead.nurture_enabled,
             'qualification': qualification,
         })

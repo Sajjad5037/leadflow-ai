@@ -22,7 +22,7 @@ def qualify_lead(
     source: str,
     business_problem: str,
 ) -> dict:
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY_S")
 
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY environment variable is required.")
@@ -159,7 +159,7 @@ def generate_followup_email(
     summary: str,
     recommended_action: str,
 ) -> dict:
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY_S")
 
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY environment variable is required.")

@@ -40,6 +40,54 @@ def create_property(payload: PropertyCreateRequest, db: Session = Depends(get_db
 
     return property_
 
+from decimal import Decimal
+from fastapi import Query
+
+
+@router.get('/properties/search', response_model=list[PropertyListResponse])
+def search_properties(
+    location: str | None = Query(default=None),
+    property_type: str | None = Query(default=None),
+    bedrooms: int | None = Query(default=None, ge=0),
+    max_price: Decimal | None = Query(default=None, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Property)
+
+    # Only search currently available properties
+    query = query.filter(Property.status == 'AVAILABLE')
+
+    if location:
+        query = query.filter(Property.location.ilike(f'%{location}%'))
+
+    if property_type:
+        query = query.filter(
+            Property.property_type.ilike(property_type)
+        )
+
+    if bedrooms is not None:
+        query = query.filter(Property.bedrooms >= bedrooms)
+
+    if max_price is not None:
+        query = query.filter(Property.price <= max_price)
+
+    properties = (
+        query
+        .order_by(Property.created_at.desc())
+        .all()
+    )
+
+    responses = []
+
+    for property_ in properties:
+        response = PropertyListResponse.model_validate(property_)
+
+        for image in response.images:
+            image.image_url = generate_signed_url(image.image_url)
+
+        responses.append(response)
+
+    return responses
 
 @router.get('/properties', response_model=list[PropertyListResponse])
 def get_properties(db: Session = Depends(get_db)):
