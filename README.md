@@ -1,37 +1,55 @@
-# LeadFlow AI
+# AI Sales Automation Platform
 
-This repository is the Stage 1 foundation for the LeadFlow AI project as defined in the master specification.
+An AI-powered sales automation platform for real-estate businesses that combines lead management, AI qualification, external CRM integration, workflow automation, and a tool-using AI sales agent with human-in-the-loop controls.
 
-## Scope
+The project was built as a practical exploration of how AI agents can be connected to real business systems rather than functioning as standalone chatbots.
 
-This stage establishes the project foundation only:
+---
 
-- React frontend shell
-- FastAPI backend shell
-- n8n folder for future workflows
-- repository documentation and structure
+## Overview
 
-No LeadFlow business logic, GHL integration, or workflow automation is implemented yet.
+Real-estate sales teams spend significant time reviewing leads, understanding customer requirements, updating CRM systems, scheduling follow-ups, and preparing communication.
 
-## Start the frontend
+This project explores how those workflows can be augmented with AI and automation.
 
-```bash
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0
-```
+The platform allows sales teams to:
 
-## Start the backend
+- Capture and manage leads
+- Automatically qualify leads using AI
+- Assign leads to salespeople
+- Manage properties
+- Schedule and manage follow-ups
+- Synchronize lead information with an external CRM
+- Automate cross-system workflows using n8n
+- Use an AI sales assistant to research leads and properties
+- Generate follow-up drafts
+- Trigger business workflows through AI tools
+- Keep humans in control of consequential actions
 
-```bash
-cd backend
-python -m venv .venv
-. .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+---
 
-## Health checks
+# Core Architecture
 
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000/health
+```text
+                         AI Sales Assistant
+                                │
+                                ▼
+                         LangGraph Agent
+                                │
+              ┌─────────────────┼─────────────────┐
+              │                 │                 │
+              ▼                 ▼                 ▼
+        Lead Tools        Property Tools     CRM Tools
+              │                 │                 │
+              └─────────────────┼─────────────────┘
+                                │
+                                ▼
+                         FastAPI Backend
+                                │
+                 ┌──────────────┼──────────────┐
+                 │              │              │
+                 ▼              ▼              ▼
+            PostgreSQL        n8n          External CRM
+                                │
+                                ▼
+                         Business Workflows
