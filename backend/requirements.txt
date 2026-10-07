@@ -40,3 +40,6 @@ urllib3==2.7.0
 uvicorn==0.30.6
 watchfiles==1.2.0
 websockets==17.0.1
+langgraph
+langchain-core
+langchain-openai
