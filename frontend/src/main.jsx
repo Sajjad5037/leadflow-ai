@@ -604,8 +604,18 @@ function AdminDashboard() {
   const [propertyView, setPropertyView] = useState('list');
   const [propertyImages, setPropertyImages] = useState([]);
   const [removedPropertyImageIds, setRemovedPropertyImageIds] = useState([]);
+  const [aiMessages, setAiMessages] = useState([]);
+  const [threadId] = useState(() => crypto.randomUUID());
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
   const propertyFormRef = useRef(null);
   const propertyImageInputRef = useRef(null);
+  const aiConversationEndRef = useRef(null);
+
+  useEffect(() => {
+    aiConversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiMessages, aiLoading]);
 
   useEffect(() => {
     async function loadLeads() {
@@ -1444,6 +1454,172 @@ async function handleDeleteFollowup(followupId) {
     }
   }
 
+  async function handleAiAssistantSubmit(event) {
+    event.preventDefault();
+
+    const message = aiInput.trim();
+
+    if (!message || aiLoading) {
+      return;
+    }
+
+    setAiMessages((previous) => [...previous, { role: 'user', content: message }]);
+    setAiInput('');
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai-assistant/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          thread_id: threadId,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      console.log('AI ASSISTANT ACTION:', data?.action);
+
+      if (!response.ok) {
+        const detail = data?.detail;
+        const errorMessage =
+          typeof detail === 'string'
+            ? detail
+            : detail?.message || 'The AI Assistant could not respond. Please try again.';
+        throw new Error(errorMessage);
+      }
+
+      if (typeof data?.response !== 'string') {
+        throw new Error('The AI Assistant returned an invalid response. Please try again.');
+      }
+
+      setAiMessages((previous) => [
+          ...previous,
+          {
+              role: 'assistant',
+              content: data.response,
+              action: data.action ?? null,
+          },
+      ]);
+    } catch (requestError) {
+      setAiError(
+        requestError.message || 'The AI Assistant could not respond. Please try again.'
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  }
+  async function handleRejectFollowup(messageIndex) {
+    setAiMessages((previous) =>
+      previous.map((message, index) =>
+        index === messageIndex
+          ? { ...message, action: null }
+          : message
+      )
+    );
+
+    setAiMessages((previous) => [
+      ...previous,
+      {
+        role: 'user',
+        content: 'I rejected the follow-up draft.',
+      },
+    ]);
+
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai-assistant/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'I rejected the follow-up draft.',
+          thread_id: threadId,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail || 'The AI Assistant could not process the rejection.'
+        );
+      }
+
+      setAiMessages((previous) => [
+        ...previous,
+        {
+          role: 'assistant',
+          content: data.response,
+          action: data.action ?? null,
+        },
+      ]);
+    } catch (requestError) {
+      setAiError(
+        requestError.message ||
+          'The AI Assistant could not process the rejection.'
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  }
+  async function handleApproveFollowup(messageIndex) {
+    setAiLoading(true);
+    setAiError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai-assistant/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          thread_id: threadId,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      console.log('APPROVE RESPONSE STATUS:', response.status);
+      console.log('APPROVE RESPONSE:', data);
+      console.log('API BASE URL:', API_BASE_URL);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail || 'The follow-up could not be sent.'
+        );
+      }
+
+      setAiMessages((previous) =>
+        previous.map((message, index) =>
+          index === messageIndex
+            ? { ...message, action: null }
+            : message
+        )
+      );
+
+      setAiMessages((previous) => [
+        ...previous,
+        {
+          role: 'assistant',
+          content: 'Approved. The follow-up email has been sent successfully.',
+          action: null,
+        },
+      ]);
+    } catch (requestError) {
+      setAiError(
+        requestError.message || 'The follow-up could not be sent.'
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   const totalLeads = leads.length;
   const highPriority = leads.filter(
     (lead) => getPriority(lead.qualification?.score) === 'HIGH'
@@ -1513,11 +1689,19 @@ async function handleDeleteFollowup(followupId) {
             >
               Manage Properties
             </button>
+
+            <button
+              type="button"
+              className={activeTab === 'ai-assistant' ? 'command-tab active' : 'command-tab'}
+              onClick={() => setActiveTab('ai-assistant')}
+            >
+              AI Assistant
+            </button>
           </nav>
           <div className="form-header command-center-header">
             <div style={{ minWidth: 0, flex: '1 1 0' }}>
               <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
-              <h2>Sales Command Center-Click on any lead to see its AI cmddetails</h2>
+              <h2>Sales Command Center-Click on any lead to see its AI Summary</h2>
               <p className="command-center-subtitle">
                 A focused view of pipeline health, opportunity movement, and team momentum.
               </p>
@@ -2615,6 +2799,149 @@ async function handleDeleteFollowup(followupId) {
               )}
             </section>
           )}
+
+          {activeTab === 'ai-assistant' && (
+            <section className="command-panel ai-assistant-panel" aria-label="AI Sales Assistant">
+              <div className="command-section-heading">
+                <div>
+                  <span>Sales Support</span>
+                  <h3>AI Sales Assistant</h3>
+                </div>
+                <span className="lead-badge followup-sent">API connected</span>
+              </div>
+
+              <p className="ai-assistant-subtitle">
+                Ask for help finding properties, reviewing leads, and preparing your next sales action.
+              </p>
+
+              <div
+                className="ai-assistant-conversation"
+                role="log"
+                aria-live="polite"
+                aria-label="AI Assistant conversation"
+              >
+                {aiMessages.length === 0 && !aiLoading && (
+                  <p className="ai-assistant-empty">Your conversation will appear here.</p>
+                )}
+
+                {aiMessages.map((message, index) => (
+                <div
+                  className={`ai-assistant-message ai-assistant-message-${message.role}`}
+                  key={`${message.role}-${index}`}
+                >
+                  <span>{message.role === 'user' ? 'You' : 'AI Assistant'}</span>
+                  <p>{message.content}</p>
+
+                  {message.action?.type === 'FOLLOWUP_DRAFT' && (
+                    <div className="ai-followup-draft">
+                      <div>
+                        <strong>To:</strong> {message.action.recipient_email}
+                      </div>
+
+                      <div>
+                        <strong>Subject:</strong> {message.action.subject}
+                      </div>
+
+                      <div>
+                        <strong>Body:</strong>
+                      </div>
+
+                      <p>{message.action.body}</p>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '12px',
+                          marginTop: '16px',
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleApproveFollowup(index)}
+                          style={{
+                            display: 'inline-block',
+                            padding: '10px 16px',
+                            border: '1px solid #64748b',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: '#ffffff',
+                            background: '#2563eb',
+                          }}
+                        >
+                          Approve & Send
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRejectFollowup(index)}
+                          style={{
+                            display: 'inline-block',
+                            padding: '10px 16px',
+                            border: '1px solid #64748b',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: '#ffffff',
+                            background: '#475569',
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+                {aiLoading && (
+                  <p className="ai-assistant-thinking">AI is thinking...</p>
+                )}
+
+                <div ref={aiConversationEndRef} />
+              </div>
+
+              <form className="ai-assistant-form" onSubmit={handleAiAssistantSubmit}>
+                <label htmlFor="ai-assistant-input">Message</label>
+                <div className="ai-assistant-composer">
+                  <textarea
+                    id="ai-assistant-input"
+                    value={aiInput}
+                    onChange={(event) => {
+                      setAiInput(event.target.value);
+                      if (aiError) {
+                        setAiError('');
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                    rows="3"
+                    placeholder="Ask about leads or available properties..."
+                    disabled={aiLoading}
+                  />
+
+                  <button
+                    type="submit"
+                    className="submit-button ai-assistant-send-button"
+                    disabled={aiLoading || !aiInput.trim()}
+                  >
+                    {aiLoading ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </form>
+
+              {aiError && (
+                <p className="error-banner" role="alert">
+                  {aiError}
+                </p>
+              )}
+            </section>
+          )}
         </section>
       </div>
     </main>
@@ -2935,6 +3262,8 @@ function PropertiesPage() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/properties`);
         const data = await response.json().catch(() => null);
+        console.log('APPROVE RESPONSE STATUS:', response.status);
+
 
         if (!response.ok) {
           throw new Error('Failed to load properties.');
