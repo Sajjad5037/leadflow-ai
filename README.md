@@ -1,29 +1,33 @@
-# FlowPilot — Performance Review Workflow Automation Platform
+# Al Qaim Estate — AI Sales Automation Platform
 
-FlowPilot is a full-stack performance management and workflow automation platform that digitizes the employee performance review lifecycle. It connects goal and KPI setting, multi-stage evaluations, HR finalization, monthly performance tracking, automated notifications, and reporting in a centralized application.
+Al Qaim Estate is an AI-powered sales automation platform designed for real-estate businesses. It combines lead management, AI-assisted qualification, property management, CRM integration, and workflow automation to help sales teams understand prospects, organize opportunities, and coordinate follow-ups.
 
-Built with **React, FastAPI, and PostgreSQL**, FlowPilot combines configurable evaluation forms with structured workflow orchestration and cycle-aware performance data. The platform is designed to reduce manual coordination, improve consistency across review stages, and provide a consolidated view of employee performance.
+Built with **React, FastAPI, PostgreSQL, OpenAI, LangGraph, and n8n**, the platform connects an AI sales assistant with business APIs and external systems. The AI agent can retrieve lead and property information, search CRM records, prepare follow-up messages, and trigger controlled business workflows through tool calling and API integrations.
+
+The project demonstrates how AI agents can be integrated into practical business processes rather than operating as standalone chatbots.
 
 ## Table of Contents
 
 - [Project Overview](#project-overview)
 - [Core Features](#core-features)
-- [End-to-End Business Workflow](#end-to-end-business-workflow)
-- [Goal and KPI Setting](#goal-and-kpi-setting)
-- [Employee Evaluation](#employee-evaluation)
-- [Quarterly Evaluation Cycles](#quarterly-evaluation-cycles)
-- [Configurable Form Builder](#configurable-form-builder)
+- [End-to-End Sales Workflow](#end-to-end-sales-workflow)
+- [Lead Management](#lead-management)
+- [AI-Powered Lead Qualification](#ai-powered-lead-qualification)
+- [LangGraph AI Sales Assistant](#langgraph-ai-sales-assistant)
+- [Follow-Up Workflow Automation](#follow-up-workflow-automation)
+- [CRM Integration](#crm-integration)
+- [Property Management](#property-management)
+- [Human-in-the-Loop Approval](#human-in-the-loop-approval)
 - [System Architecture](#system-architecture)
 - [Data Model](#data-model)
-- [Evaluation Assignment and Access](#evaluation-assignment-and-access)
-- [Master Sheets and PDF Reporting](#master-sheets-and-pdf-reporting)
-- [Email Notifications](#email-notifications)
 - [API Architecture](#api-architecture)
 - [Technology Stack](#technology-stack)
 - [Repository Structure](#repository-structure)
 - [Deployment](#deployment)
 - [Engineering Highlights](#engineering-highlights)
+- [Testing and Verification](#testing-and-verification)
 - [My Contributions](#my-contributions)
+- [Project Status](#project-status)
 
 ---
 
@@ -31,418 +35,654 @@ Built with **React, FastAPI, and PostgreSQL**, FlowPilot combines configurable e
 
 ### The Problem
 
-Traditional performance review processes often rely on spreadsheets, email threads, manually maintained documents, and disconnected forms. These approaches can make it difficult to coordinate employees, supervisors, and HR, maintain consistent evaluation records, and track progress against agreed performance targets.
+Real-estate sales teams often manage incoming inquiries, investor requirements, property information, CRM records, and follow-up activities across disconnected systems.
+
+This creates several operational challenges:
+
+- Lead information can be fragmented across multiple channels.
+- Salespeople need to assess each prospect's requirements and readiness.
+- Important follow-ups can be delayed or overlooked.
+- Property information must be connected to prospective buyers' requirements.
+- Sales teams may need to switch between lead-management tools and external CRM systems.
+- Repetitive administrative work reduces the time available for meaningful customer interactions.
 
 ### The Solution
 
-FlowPilot connects the performance review lifecycle through configurable workflows, centralized data storage, role-specific interfaces, automated notifications, and consolidated reporting.
+Al Qaim Estate brings these activities into an AI-assisted sales platform.
 
-The platform supports two connected business workflows:
+The system combines centralized lead management with AI qualification, property information, CRM connectivity, and automated follow-up workflows.
 
-1. **Goal and KPI Setting:** Employees propose goals and KPIs, supervisors provide their input, and HR reviews and finalizes the agreed targets.
-2. **Employee Evaluation:** Finalized goals and KPIs are carried into the evaluation process, where employees and supervisors record performance information and HR reviews the results.
+The AI sales assistant uses LangGraph to coordinate language-model reasoning and business tools. When a user requests a follow-up, the agent can invoke an n8n webhook, which connects to the FastAPI backend to create a scheduled follow-up record.
 
-The two workflows remain distinct while sharing finalized performance targets.
+The architecture separates AI reasoning, workflow orchestration, and business logic so that actions are executed through defined application interfaces.
+
+### Product Vision
+
+The platform is designed to support the following business process:
+
+1. Capture and organize prospective buyers and investors.
+2. Understand their requirements and qualify their interest.
+3. Assign leads to appropriate salespeople.
+4. Identify potentially relevant properties.
+5. Support sales conversations and follow-up planning.
+6. Synchronize lead information with external CRM systems.
+7. Automate repetitive sales workflows.
+8. Provide visibility into leads, assignments, properties, and follow-up activity.
+
+The longer-term objective is to develop an AI-assisted real-estate sales operating system that supports sales teams while keeping consequential decisions under human control.
 
 ## Core Features
 
-- **Multi-stage workflow automation:** Structured Employee, Supervisor, and HR stages.
-- **Configurable evaluation forms:** Reusable components driven by saved workflow configuration.
-- **Goal and KPI management:** Separate employee and supervisor submissions followed by HR finalization.
-- **Cross-workflow data integration:** Finalized goals and KPIs are reused in subsequent Employee Evaluations.
-- **Quarterly evaluation cycles:** Assignments remain associated with their relevant review periods.
-- **Monthly performance tracking:** Progress is recorded against finalized quarterly targets.
-- **Role-specific interfaces:** Forms and responses are organized around the current workflow stage.
-- **Stage-specific access links:** Participants access the relevant evaluation stage.
-- **Automated email notifications:** Workflow-specific communication directs participants to the appropriate evaluation.
-- **Evaluation Master Sheets:** Consolidated performance information for review and reporting.
-- **PDF generation:** Structured evaluation data is rendered into downloadable reports.
+- **Centralized lead management:** Create, retrieve, and manage prospective customer records.
+- **AI lead qualification:** Analyze lead information and classify prospects using HOT, WARM, and COLD qualification categories.
+- **Lead assignment:** Organize leads for sales staff.
+- **Role-specific dashboards:** Provide separate administrative and salesperson workspaces.
+- **Property management:** Maintain property information for sales activities.
+- **Follow-up scheduling:** Create and track scheduled lead follow-ups.
+- **LangGraph agent orchestration:** Coordinate an AI assistant with defined business tools.
+- **Tool-based business operations:** Retrieve lead details, search CRM records, inspect properties, and initiate approved workflows.
+- **n8n workflow automation:** Connect webhook-triggered workflows to backend APIs.
+- **External CRM integration:** Search for existing contacts, create CRM contacts, and associate leads with CRM records.
+- **Human-in-the-loop approval:** Review proposed follow-up messages before sending them through the approval workflow.
+- **Email integration:** Use an email delivery service for follow-up communication.
+- **Cloud deployment:** Host application services and the automation workflow online.
 
 ---
 
-## End-to-End Business Workflow
+## End-to-End Sales Workflow
 
-The following diagram illustrates how Goal and KPI Setting feeds into Employee Evaluation.
+The platform connects lead management, AI assistance, CRM synchronization, and follow-up automation.
 
-```mermaid
-flowchart TD
-    A["Goal and KPI Assignment Created"]
-    B["Employee Proposes Goals and KPIs"]
-    C["Supervisor Reviews and Contributes"]
-    D["HR Reviews Both Submissions"]
-    E["HR Finalizes Goals and KPIs"]
-    F[("Finalized Goals and KPIs")]
-    G["Employee Evaluation Assignment"]
-    H["Employee Evaluation"]
-    I["Supervisor Evaluation"]
-    J["HR Review"]
-    K["Performance Records"]
-    L["Evaluation Master Sheet"]
-    M["PDF Report"]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> M
+```text
+Prospective Buyer or Investor
+              |
+              v
+       Lead Capture
+              |
+              v
+     Centralized Lead Record
+              |
+              v
+      AI Lead Qualification
+              |
+              v
+    Lead Assignment to Sales
+              |
+              v
+    AI Sales Assistant
+              |
+       +------+------+
+       |             |
+       v             v
+  Property and    CRM Contact
+  Lead Research   Lookup/Sync
+       |             |
+       +------+------+
+              |
+              v
+      Follow-Up Planning
+              |
+              v
+       LangGraph Agent
+              |
+              v
+        n8n Webhook
+              |
+              v
+       FastAPI Backend
+              |
+              v
+     Scheduled Follow-Up
+              |
+              v
+      Database Tracking
+              |
+              v
+      Follow-Up Processing
 ```
 
-The finalized targets produced by the first workflow provide the foundation for the subsequent evaluation process.
+This diagram represents the platform's implemented capabilities and intended business flow. Not every stage is necessarily executed automatically for every lead.
 
 ---
 
-## Goal and KPI Setting
+## Lead Management
 
-The Goal and KPI Setting workflow collects proposed performance targets from employees and supervisors before HR finalizes the agreed goals and KPIs.
+Lead management provides the foundation for the sales workflow.
 
-```mermaid
-flowchart TD
-    A["Create Goal and KPI Assignment"]
-    B["Employee Stage"]
-    C["Employee Submits Proposed Goals and KPIs"]
-    D["Supervisor Stage"]
-    E["Supervisor Submits Input"]
-    F["HR Stage"]
-    G["Review Employee and Supervisor Responses"]
-    H["Finalize Goals and KPIs"]
-    I[("Persist Finalized Targets")]
+The FastAPI backend exposes endpoints for creating leads, retrieving lead information, and accessing follow-up records.
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
+### Lead Operations
+
+- Create a lead record.
+- Retrieve the lead list.
+- Retrieve an individual lead by ID.
+- Access lead details through the AI assistant.
+- Assign leads to sales staff.
+- Associate a lead with an external CRM contact.
+- Retrieve follow-up information associated with a lead.
+
+### Lead Lifecycle
+
+```text
+Lead Created
+     |
+     v
+Lead Information Stored
+     |
+     v
+AI Qualification
+     |
+     v
+Sales Assignment
+     |
+     v
+Sales Activity and Follow-Up
+     |
+     v
+Opportunity Management
 ```
 
-### Employee Responsibilities
-
-- Propose goals and KPIs.
-- Complete the employee-stage form.
-- Submit responses for supervisor review.
-
-### Supervisor Responsibilities
-
-- Provide independent input on goals and KPIs.
-- Complete the supervisor-stage form.
-- Submit responses for HR review.
-
-### HR Responsibilities
-
-- Review employee and supervisor submissions.
-- Finalize the agreed goals and KPIs.
-- Complete the HR stage of the workflow.
-
-Finalized targets are stored as structured records and can subsequently be retrieved by the Employee Evaluation workflow.
+The platform is designed to make lead information accessible to both sales users and the AI assistant through application-controlled APIs.
 
 ---
 
-## Employee Evaluation
+## AI-Powered Lead Qualification
 
-Employee Evaluation is a separate workflow associated with an evaluation cycle. It uses finalized goals and KPIs from the Goal and KPI Setting workflow and collects performance information through role-specific stages.
+The platform uses OpenAI to support lead qualification.
 
-```mermaid
-flowchart TD
-    A[("Finalized Goals and KPIs")]
-    B["Create Employee Evaluation"]
-    C["Associate Evaluation Cycle"]
-    D["Employee Evaluation Stage"]
-    E["Supervisor Evaluation Stage"]
-    F["HR Review Stage"]
-    G["Consolidated Evaluation Information"]
-    H["Evaluation Master Sheet"]
-    I["PDF Reporting"]
+Lead information is analyzed to identify the prospect's requirements, investment intent, and potential readiness for further sales engagement.
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-```
+### Qualification Categories
 
-Depending on the configured form, evaluation components can support goal progress, self-ratings, supervisor ratings, KPI results, and other performance review information.
-
-The workflow maintains the distinction between employee, supervisor, and HR responses.
-
----
-
-## Quarterly Evaluation Cycles
-
-FlowPilot organizes performance evaluations around quarterly cycles.
-
-| Quarter | Calendar months |
+| Category | Purpose |
 |---|---|
-| Q1 | January – March |
-| Q2 | April – June |
-| Q3 | July – September |
-| Q4 | October – December |
+| HOT | Indicates a potentially high-priority sales opportunity. |
+| WARM | Indicates a prospect who may need additional information or engagement. |
+| COLD | Indicates a prospect with lower immediate sales readiness. |
 
-Each evaluation assignment can retain its associated evaluation cycle, allowing historical evaluations to remain connected to the appropriate review period.
+These categories support prioritization and sales decision-making. They are not guarantees that a prospect will or will not convert.
 
-The application uses cycle information to determine the displayed monthly tracking period. For example, a Q4 evaluation can use October, November, and December for monthly tracking when a cycle begins partway through September and the partial starting month is excluded.
+### Qualification Workflow
+
+```text
+Lead Information
+       |
+       v
+AI Analysis
+       |
+       v
+Structured Qualification Result
+       |
+       v
+HOT / WARM / COLD
+       |
+       v
+Sales Team Review and Action
+```
+
+Structured AI output allows the application to use qualification results within the lead-management workflow.
 
 ---
 
-## Configurable Form Builder
+## LangGraph AI Sales Assistant
 
-FlowPilot uses a configurable workflow and form-rendering architecture. Instead of implementing every evaluation form as an independent hard-coded page, the platform stores workflow configuration as structured JSON and uses that configuration to render the relevant components.
+The AI sales assistant uses LangGraph to coordinate language-model reasoning, tool execution, and business operations.
 
-```mermaid
-flowchart TD
-    A["Administrator Configures Form"]
-    B["Workflow and Component Configuration"]
-    C[("Save Template Configuration")]
-    D["Create Evaluation Assignment"]
-    E["Load Assignment Workflow"]
-    F["Resolve Current Stage"]
-    G["Render Configured Components"]
-    H["Collect Stage-Specific Responses"]
-    I["Validate and Submit"]
+Rather than relying only on conversational responses, the agent can invoke defined tools to retrieve information or initiate actions through application APIs.
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
+### Available Tool Capabilities
+
+The assistant includes tools for operations such as:
+
+- Retrieving lead details.
+- Retrieving CRM contact information.
+- Searching for CRM contacts by email.
+- Comparing local lead information with CRM information.
+- Retrieving property details.
+- Searching available properties.
+- Drafting follow-up messages.
+- Triggering n8n workflows to schedule follow-ups.
+
+The actual tools available to the agent depend on the implemented tool definitions.
+
+### Agent Architecture
+
+```text
+User Request
+     |
+     v
+LangGraph StateGraph
+     |
+     v
+LLM Reasoning
+     |
+     v
+Tool Selection
+     |
+     v
+Tool Execution
+     |
+     +----------------------+
+     |                      |
+     v                      v
+Business API             CRM API
+     |                      |
+     v                      v
+Lead and Property        Contact Data
+Information
+     |
+     v
+Agent Response
 ```
 
-This architecture supports reusable components and role-specific form rendering while keeping the configured workflow structure separate from the runtime interface.
+### Why LangGraph?
+
+LangGraph provides a structured way to coordinate an agent's reasoning and tool calls.
+
+In this project, it connects the language model to business-specific tools while allowing the backend to retain responsibility for database operations, validation, and external service calls.
+
+This approach makes the assistant more useful than a basic chatbot because it can interact with actual application data and initiate defined business workflows.
+
+---
+
+## Follow-Up Workflow Automation
+
+Follow-up scheduling connects the LangGraph AI assistant, online n8n, FastAPI, and PostgreSQL.
+
+The AI agent can interpret a natural-language request such as:
+
+> Schedule an email follow-up for lead ID 8 for tomorrow at 1 PM Pakistan time.
+
+The agent converts the request into structured parameters and sends them to the n8n production webhook.
+
+### Scheduling Workflow
+
+```text
+User Requests Follow-Up
+          |
+          v
+LangGraph Agent
+          |
+          v
+Extract Lead ID and Time
+          |
+          v
+Convert Local Time to UTC
+          |
+          v
+POST Request to n8n Webhook
+          |
+          v
+n8n HTTP Request Node
+          |
+          v
+FastAPI Follow-Up Endpoint
+          |
+          v
+Create Follow-Up Record
+          |
+          v
+PostgreSQL
+          |
+          v
+Return Scheduling Confirmation
+```
+
+### Online n8n Integration
+
+The production webhook is hosted on Railway:
+
+```text
+POST /webhook/al-qaim-agent
+```
+
+The complete webhook URL is configured in the backend environment/code.
+
+The n8n workflow receives the request and calls the deployed FastAPI backend to create a follow-up record.
+
+The backend endpoint used by this workflow is:
+
+```text
+POST /api/leads/{lead_id}/followups
+```
+
+The workflow sends structured data including:
+
+- Lead ID
+- Communication channel
+- Scheduled timestamp
+- Attempt number
+
+### Timezone-Aware Scheduling
+
+The AI assistant's scheduling instructions interpret unspecified scheduling times in Pakistan Standard Time (UTC+05:00), unless the user specifies another timezone.
+
+The scheduled timestamp is converted to UTC before the scheduling tool is called.
+
+For example:
+
+| Field | Example |
+|---|---|
+| User-requested time | 1:00 PM Pakistan time |
+| UTC equivalent | 08:00 UTC |
+| Follow-up channel | EMAIL |
+| Initial status | SCHEDULED |
+
+### Verification
+
+The online workflow was tested using lead ID `8`. The AI assistant confirmed that the follow-up was scheduled for October 10, 2026, at 1:00 PM Pakistan time, corresponding to `2026-10-10T08:00:00Z`.
+
+The assistant returned workflow run ID `9` and status `SCHEDULED`.
+
+This verifies the scheduling path and record-creation response. Actual email delivery at the scheduled time must be verified separately.
+
+---
+
+## CRM Integration
+
+Al Qaim Estate integrates with a separate CRM service to connect lead-management records with external contact and opportunity data.
+
+The CRM service uses FastAPI and PostgreSQL and maintains CRM-specific tables such as `crm_contacts` and `crm_opportunities`.
+
+### CRM Capabilities
+
+- Retrieve CRM contacts.
+- Search contacts by email.
+- Retrieve individual contacts.
+- Create CRM contacts.
+- Work with CRM opportunity records through the CRM API.
+- Synchronize eligible leads with CRM contacts.
+- Associate local leads with external CRM contact IDs.
+- Identify leads that have not yet been synchronized.
+- Compare local lead information with CRM information.
+
+### CRM Synchronization Workflow
+
+```text
+Al Qaim Lead
+     |
+     v
+Check CRM Association
+     |
+     v
+Search CRM by Email
+     |
+     +---------------------+
+     |                     |
+     v                     v
+Contact Found          No Contact Found
+     |                     |
+     v                     v
+Link Existing           Create CRM Contact
+Contact                     |
+     |                     |
+     +----------+----------+
+                |
+                v
+       Save CRM Contact ID
+                |
+                v
+       Lead and CRM Linked
+```
+
+The integration supports reconciliation between lead records and CRM contacts, reducing the need to manually create duplicate contact records.
+
+### CRM API Examples
+
+The CRM service includes endpoints such as:
+
+```text
+GET  /api/contacts
+GET  /api/contacts/by-email/{email}
+GET  /api/contacts/{contact_id}
+POST /api/contacts
+```
+
+The main Al Qaim backend also provides lead synchronization operations:
+
+```text
+POST  /api/leads/{lead_id}/sync-crm
+PATCH /api/leads/{lead_id}/crm-contact
+GET   /api/leads/unsynced
+```
+
+These endpoints connect the primary lead-management application to the external CRM service.
+
+---
+
+## Property Management
+
+Property management provides a source of property information for sales users and the AI assistant.
+
+The platform includes property-management functionality and AI tools for retrieving property details and searching available properties.
+
+### Intended Sales Workflow
+
+```text
+Lead Requirements
+        |
+        v
+Understand Budget and Preferences
+        |
+        v
+Search Available Properties
+        |
+        v
+Review Potential Matches
+        |
+        v
+Salesperson Reviews Options
+        |
+        v
+Continue Sales Conversation
+```
+
+Property information can help the sales team connect a prospect's requirements with available real-estate opportunities.
+
+AI-generated suggestions should be treated as decision support. Property availability, pricing, and suitability should be confirmed against current business records before being presented as definitive.
+
+---
+
+## Human-in-the-Loop Approval
+
+The platform includes an approval workflow for consequential actions, particularly sending AI-drafted follow-up emails.
+
+The AI assistant can prepare a proposed follow-up message and present it for review before the email is sent.
+
+### Approval Workflow
+
+```text
+User Requests Follow-Up Draft
+             |
+             v
+AI Drafts Message
+             |
+             v
+Present Draft for Review
+             |
+       +-----+-----+
+       |           |
+       v           v
+    Approve       Reject
+       |           |
+       v           v
+ Send Email     Do Not Send
+       |
+       v
+ Return Result
+```
+
+The approval API supports the approval interaction, and the application uses Resend for email delivery.
+
+This design keeps the user involved before the system performs the email-sending action. Scheduling a follow-up and approving a drafted email are distinct workflows.
 
 ---
 
 ## System Architecture
 
-FlowPilot uses a React frontend, a FastAPI backend, and a PostgreSQL database. Backend routers expose the application's APIs, while service modules handle specific business operations and HTML templates support PDF report generation.
+Al Qaim Estate separates the frontend, backend business logic, AI orchestration, workflow automation, and CRM integration.
 
-```mermaid
-flowchart TB
-    U["Employees, Supervisors, HR, Administrators"]
+### Architecture Overview
 
-    subgraph Frontend["Frontend - React and Vite"]
-        UI["Pages and User Interfaces"]
-        FB["Workflow and Form Builder"]
-        RT["Evaluation Runtime"]
-        MS["Master Sheet Viewer"]
-    end
+```text
+                   SALES USERS
+                       |
+                       v
+              React / Vite Frontend
+                       |
+                       v
+               FastAPI Backend
+                       |
+        +--------------+--------------+
+        |              |              |
+        v              v              v
+   PostgreSQL       OpenAI         Resend
+   Application     Language       Email Service
+      Data          Model
+                       |
+                       v
+                 LangGraph Agent
+                       |
+                Defined Tool Calls
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+         Business APIs       n8n Workflow
+                                 |
+                                 v
+                         FastAPI Follow-Up API
 
-    subgraph Backend["Backend - Python and FastAPI"]
-        API["REST API Layer"]
-        WF["Workflow and Assignment Logic"]
-        CYC["Evaluation Cycle Logic"]
-        TGT["Finalized Target Service"]
-        EM["Email Service"]
-        PDF["PDF Rendering Service"]
-    end
-
-    DB[("PostgreSQL Database")]
-    MAIL["Email Delivery Provider"]
-    HTML["HTML PDF Templates"]
-    OUT["Generated PDF"]
-
-    U --> UI
-    UI --> FB
-    UI --> RT
-    UI --> MS
-
-    FB --> API
-    RT --> API
-    MS --> API
-
-    API --> WF
-    API --> CYC
-    API --> TGT
-
-    WF <--> DB
-    CYC <--> DB
-    TGT <--> DB
-
-    WF --> EM
-    EM --> MAIL
-
-    API --> PDF
-    PDF --> HTML
-    PDF --> OUT
+             External CRM Service
+                       |
+                       v
+              CRM PostgreSQL Data
 ```
 
-### Architectural Responsibilities
+### Frontend
 
-**Frontend**
+The React frontend provides the user-facing application, including administrative and salesperson interfaces.
 
-- Displays assignment management and evaluation interfaces.
-- Provides configurable form-building interfaces.
-- Renders forms according to workflow configuration and stage.
-- Presents consolidated Master Sheet information.
+Responsibilities include:
 
-**Backend**
+- Displaying leads and lead details.
+- Supporting sales and administrative operations.
+- Presenting property information.
+- Providing access to the AI assistant.
+- Displaying proposed actions and approval controls.
 
-- Exposes REST APIs.
-- Manages evaluation assignments and workflow transitions.
-- Retrieves and stores stage-specific responses.
-- Associates assignments with evaluation cycles.
-- Processes finalized goals and KPIs.
-- Sends workflow email notifications.
-- Generates PDF reports.
+### Backend
 
-**Database**
+FastAPI owns the application and business logic.
 
-- Persists employee records, templates, assignments, evaluation cycles, responses, and finalized targets.
+Responsibilities include:
+
+- Exposing REST APIs.
+- Validating requests.
+- Managing lead and follow-up operations.
+- Interacting with PostgreSQL through SQLAlchemy.
+- Calling AI services.
+- Integrating with the CRM service.
+- Executing the approval workflow.
+- Coordinating email and automation integrations.
+
+### AI Layer
+
+OpenAI and LangGraph support language understanding, reasoning, and tool orchestration.
+
+The agent does not require unrestricted database access. It invokes defined tools, which communicate with application services.
+
+### Workflow Automation
+
+n8n coordinates external workflow steps through webhooks and HTTP requests.
+
+The architectural principle is:
+
+**LangGraph coordinates AI tool usage; n8n orchestrates workflows; FastAPI owns business logic and data operations.**
 
 ---
 
 ## Data Model
 
-PostgreSQL provides persistent storage for the platform's core workflow and evaluation data.
+PostgreSQL provides persistent storage for application records.
 
-### Core Entities
+### Main Application Data
 
-| Entity | Responsibility |
+The platform manages entities and records associated with:
+
+- Leads
+- Properties
+- Follow-ups
+- CRM contact associations
+- Sales assignments
+- User and role information
+
+The precise schema is defined by the implemented SQLAlchemy models.
+
+### CRM Data
+
+The separate CRM service maintains CRM-specific records, including:
+
+- `crm_contacts`
+- `crm_opportunities`
+
+### Follow-Up Record
+
+A follow-up record contains fields such as:
+
+| Field | Purpose |
 |---|---|
-| `employees` | Stores employee and workflow participant records. |
-| `evaluation_templates` | Stores reusable evaluation form and workflow configurations. |
-| `evaluation_assignments` | Stores assignments, workflow snapshots, status, and cycle associations. |
-| `evaluation_assignment_links` | Stores stage-specific access links. |
-| `evaluation_cycles` | Defines quarterly evaluation periods. |
-| `evaluation_preview_responses` | Stores evaluation preview data. |
-| `evaluation_activity_logs` | Records workflow activity. |
-| `finalized_goals` | Stores finalized goal records. |
-| `finalized_kpis` | Stores finalized KPI records. |
+| `id` | Identifies the follow-up record. |
+| `lead_id` | Associates the follow-up with a lead. |
+| `channel` | Specifies the communication channel, such as email. |
+| `scheduled_at` | Stores the scheduled timestamp. |
+| `status` | Tracks the follow-up state. |
+| `attempt_number` | Identifies the attempt number. |
+| `sent_at` | Records the sending timestamp when available. |
 
-### Entity Relationship Diagram
-
-```mermaid
-erDiagram
-    EMPLOYEES ||--o{ EVALUATION_ASSIGNMENTS : participates
-    EVALUATION_TEMPLATES ||--o{ EVALUATION_ASSIGNMENTS : configures
-    EVALUATION_CYCLES ||--o{ EVALUATION_ASSIGNMENTS : groups
-    EVALUATION_ASSIGNMENTS ||--o{ EVALUATION_ASSIGNMENT_LINKS : provides
-    EVALUATION_ASSIGNMENTS ||--o{ EVALUATION_ACTIVITY_LOGS : records
-    EVALUATION_ASSIGNMENTS ||--o{ FINALIZED_GOALS : produces
-    EVALUATION_ASSIGNMENTS ||--o{ FINALIZED_KPIS : produces
-```
-
-This is a conceptual relationship diagram. Exact foreign-key constraints and cardinalities depend on the implemented database models.
-
----
-
-## Evaluation Assignment and Access
-
-An evaluation assignment connects the relevant participants, template, workflow, and evaluation cycle. Stage-specific links allow participants to open the evaluation associated with their stage.
-
-```mermaid
-flowchart TD
-    A["Create Assignment"]
-    B["Load Employee, Supervisor, and HR"]
-    C["Resolve Template and Workflow"]
-    D["Associate Evaluation Cycle"]
-    E["Create Stage Access Links"]
-    F["Send Relevant Notifications"]
-    G["Participant Opens Access Link"]
-    H["Resolve Assignment and Stage"]
-    I["Load Workflow and Saved Responses"]
-    J["Render Evaluation Form"]
-    K["Submit Stage Responses"]
-    L["Update Workflow State"]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
-    K --> L
-```
-
-The backend coordinates assignment creation, stage-specific access, response persistence, and workflow progression.
-
----
-
-## Master Sheets and PDF Reporting
-
-Evaluation Master Sheets provide a consolidated view of performance information for HR and review purposes.
-
-Depending on the assignment and available data, the Master Sheet can include:
-
-- Employee and supervisor details.
-- Department and review cycle.
-- Finalized goals and KPIs.
-- Employee evaluation responses.
-- Supervisor evaluation responses.
-- HR responses.
-- Monthly goal progress.
-- KPI review and planning information.
-- Final agreed KPI targets.
-
-### PDF Generation Pipeline
-
-```mermaid
-flowchart LR
-    A["Evaluation Assignment"]
-    B["Retrieve Evaluation Data"]
-    C["Prepare Report Context"]
-    D["Render HTML Template"]
-    E["Playwright PDF Rendering"]
-    F["PDF Document"]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-```
-
-The backend prepares structured evaluation data, renders the HTML report template, and uses Playwright to generate the PDF document.
-
----
-
-## Email Notifications
-
-FlowPilot integrates email notifications into the evaluation process to communicate workflow actions to the relevant participants.
-
-Notification workflows support both Goal and KPI Setting and Employee Evaluation.
-
-Typical recipients include:
-
-- Employees
-- Supervisors
-- HR reviewers
-
-Email content is tailored to the relevant workflow and recipient. The application generates evaluation links so recipients can access the corresponding forms.
+The scheduling test confirmed creation of a record with `EMAIL` as the channel and `SCHEDULED` as the status.
 
 ---
 
 ## API Architecture
 
-The FastAPI backend exposes REST endpoints organized around the platform's business domains.
+The FastAPI backend exposes REST endpoints for lead management, follow-ups, CRM synchronization, and AI assistant interactions.
 
-| API area | Responsibilities |
-|---|---|
-| Employees | Employee record management. |
-| Evaluation Templates | Create, retrieve, update, activate, and deactivate templates. |
-| Evaluation Assignments | Create assignments, retrieve assignment information, resolve access links, and submit responses. |
-| Evaluation Cycles | Retrieve and manage quarterly cycle information. |
-| Evaluation Master Sheets | Retrieve consolidated evaluation information and finalized targets. |
-| Reporting | Generate evaluation reports and PDF documents. |
+### Lead Management
 
-The API layer connects the React frontend to workflow logic, persistence, and reporting services.
+```text
+POST /api/leads
+GET  /api/leads
+GET  /api/leads/{lead_id}
+```
+
+### Follow-Up Management
+
+```text
+POST /api/leads/{lead_id}/followups
+GET  /api/leads/{lead_id}/followups
+GET  /api/followups/due
+GET  /api/followups/upcoming
+```
+
+### CRM Integration
+
+```text
+POST  /api/leads/{lead_id}/sync-crm
+PATCH /api/leads/{lead_id}/crm-contact
+GET   /api/leads/unsynced
+```
+
+### AI Assistant
+
+```text
+POST /api/ai-assistant/chat
+POST /api/ai-assistant/approve
+```
+
+These endpoints provide the application interfaces used by the frontend, AI assistant, and automation workflows.
+
+The exact request schemas, authentication requirements, and response formats should be confirmed against the current API implementation.
 
 ---
 
@@ -453,8 +693,7 @@ The API layer connects the React frontend to workflow logic, persistence, and re
 - React
 - Vite
 - JavaScript
-- Material UI
-- React Router
+- CSS
 
 ### Backend
 
@@ -462,135 +701,217 @@ The API layer connects the React frontend to workflow logic, persistence, and re
 - FastAPI
 - SQLAlchemy
 - REST APIs
+- HTTPX
 
 ### Database
 
 - PostgreSQL
 
-### Reporting and Integrations
+### AI and Agent Orchestration
 
-- Playwright
-- HTML templates
-- Email delivery integration
+- OpenAI API
+- LangGraph
+- LangChain Core
+- LangChain OpenAI
+- Tool calling
+- Structured AI responses
+
+### Workflow Automation
+
+- n8n
+- Webhooks
+- HTTP Request nodes
+- JSON-based data exchange
+
+### Email and External Integrations
+
+- Resend
+- External CRM API
+- HTTPX
 
 ### Deployment
 
 - **Frontend:** Vercel
 - **Backend:** Railway
+- **CRM service:** Railway
+- **n8n:** Self-hosted on Railway
+- **Database:** PostgreSQL
 
 ---
 
 ## Repository Structure
 
-The project is organized into frontend and backend applications.
+The main Al Qaim Estate application is maintained in the LeadFlow AI repository.
 
 ```text
-flowpilot/
+leadflow-ai/
 ├── backend/
-│   ├── routers/
-│   │   ├── evaluation_assignment.py
-│   │   ├── evaluation_templates.py
-│   │   └── evaluation_master_sheet.py
-│   ├── models/
-│   ├── schemas/
-│   ├── services/
-│   │   └── finalized_target_service.py
-│   ├── utils/
-│   │   └── email_service.py
-│   ├── templates/
-│   │   └── pdf/
-│   └── main.py
-├── front end/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── ai_assistant.py
+│   │   ├── services/
+│   │   │   └── crm_service.py
+│   │   ├── ai_sales_assistant.py
+│   │   └── main.py
+│   └── requirements.txt
+├── frontend/
 │   └── src/
-│       ├── pages/
-│       ├── services/
-│       ├── components/
-│       └── workflowDesigner/
 └── README.md
 ```
 
-This is a high-level representation of the principal application areas, not an exhaustive listing of every source file.
+This is a high-level view of the main application modules. The exact directory structure may contain additional routers, models, schemas, components, and configuration files.
+
+### Repositories
+
+- **Main application:** [leadflow-ai](https://github.com/Sajjad5037/leadflow-ai)
+- **External CRM:** [al-qaim-crm](https://github.com/Sajjad5037/al-qaim-crm)
 
 ---
 
 ## Deployment
 
-The application uses separate frontend and backend deployments.
+The application is deployed as connected services.
 
-```mermaid
-flowchart TB
-    B["User's Browser"]
-    V["Vercel - React and Vite"]
-    R["Railway - FastAPI"]
-    P[("PostgreSQL")]
+### Main Backend
 
-    B --> V
-    V -->|"HTTPS REST API requests"| R
-    R <--> P
+Production API:
+
+https://leadflow-ai-production-e5f0.up.railway.app
+
+### External CRM
+
+Production service:
+
+https://al-qaim-crm-production.up.railway.app
+
+### Online n8n
+
+The n8n workflow editor is hosted on Railway. The production webhook uses the `al-qaim-agent` path.
+
+### Deployment Architecture
+
+```text
+User Browser
+     |
+     v
+React Frontend
+     |
+     v
+Al Qaim FastAPI Backend
+     |
+     +----------------------+
+     |          |           |
+     v          v           v
+ PostgreSQL   LangGraph    CRM API
+                 |
+                 v
+           Online n8n
+                 |
+                 v
+        Follow-Up API
+                 |
+                 v
+            PostgreSQL
 ```
 
-The frontend communicates with the FastAPI backend through REST APIs. The backend accesses PostgreSQL for persistent application data.
-
-Deployment environments require the appropriate API URL, database configuration, and service credentials.
+The backend's n8n webhook URL must point to the online n8n instance, and the n8n HTTP Request node must call the deployed FastAPI API rather than a local Docker hostname.
 
 ---
 
 ## Engineering Highlights
 
-### Configurable Workflow Architecture
+### LangGraph Tool Orchestration
 
-Developed a configurable evaluation system in which saved workflow definitions determine the components rendered at runtime.
+Integrated an AI assistant with business-specific tools for retrieving lead information, searching properties and CRM records, and triggering workflows.
 
-### Multi-Stage Workflow Orchestration
+### Natural-Language Scheduling
 
-Implemented separate Employee, Supervisor, and HR stages with stage-specific response handling and workflow progression.
+Implemented a scheduling interaction that converts a natural-language request into structured follow-up parameters.
 
-### Cross-Workflow Data Integration
+### Timezone Conversion
 
-Connected Goal and KPI finalization to Employee Evaluation so finalized performance targets can be reused instead of re-entered.
+Configured scheduling instructions to interpret unspecified times in Pakistan Standard Time and convert them to UTC before invoking the scheduling tool.
 
-### Cycle-Aware Performance Data
+### Online Workflow Integration
 
-Associated evaluation assignments with quarterly cycles and used cycle information to drive the displayed review period.
+Deployed n8n on Railway and connected the LangGraph agent to its production webhook.
 
-### Structured Reporting
+### Backend-Owned Business Logic
 
-Built consolidated Master Sheet functionality and PDF rendering from structured evaluation information.
+Kept lead and follow-up creation inside FastAPI rather than allowing the AI model or workflow engine to directly manipulate application database records.
 
-### Full-Stack Integration
+### CRM Synchronization
 
-Worked across React, FastAPI, SQLAlchemy, PostgreSQL, email integrations, and deployment configuration to implement and debug end-to-end business workflows.
+Connected the primary lead-management system to a separate CRM service and implemented contact lookup, creation, and association workflows.
+
+### Human-in-the-Loop Actions
+
+Implemented an approval path for proposed follow-up emails before sending.
+
+### Full-Stack Development and Deployment
+
+Worked across React, FastAPI, PostgreSQL, AI integration, CRM APIs, workflow automation, and cloud deployment.
+
+---
+
+## Testing and Verification
+
+The following capabilities have been demonstrated during development:
+
+- The deployed AI assistant responds to conversational requests.
+- The assistant can initiate the online n8n production webhook.
+- The n8n workflow calls the deployed FastAPI follow-up endpoint.
+- A follow-up record can be created and returned with a scheduled status.
+- A scheduling request for 1:00 PM Pakistan time was converted to 08:00 UTC.
+- The assistant returned a scheduling confirmation with a workflow run ID.
+
+### Verification Still Required
+
+The following should be tested independently before treating the system as production-ready:
+
+- Actual email delivery at the scheduled time.
+- Handling of failed email sends and retries.
+- Duplicate-trigger prevention and idempotency.
+- Authentication and authorization for automation endpoints.
+- Robust error reporting across the AI agent, n8n, and backend.
+- Behavior under multiple simultaneous requests.
+- Monitoring and durable automation audit records.
+
+A successful scheduling response confirms that the scheduling path worked for the tested request. It does not, by itself, establish that the email was subsequently delivered.
 
 ---
 
 ## My Contributions
 
-My work on FlowPilot includes:
+My work on Al Qaim Estate includes:
 
-- Designing and developing the React frontend.
-- Building FastAPI backend endpoints.
-- Implementing SQLAlchemy database interactions.
-- Developing evaluation assignment and workflow logic.
-- Building configurable evaluation form components.
-- Implementing quarterly evaluation cycle handling.
-- Connecting finalized goals and KPIs to Employee Evaluations.
-- Implementing stage-specific response handling and validation.
-- Developing email notification workflows.
-- Building Evaluation Master Sheet functionality.
-- Implementing HTML-based PDF reporting.
-- Debugging frontend, backend, database, and deployment issues.
-- Deploying and maintaining the application using Vercel and Railway.
+- Developing the React-based sales application.
+- Building FastAPI endpoints and backend business logic.
+- Integrating PostgreSQL through SQLAlchemy.
+- Implementing AI-assisted lead qualification.
+- Developing a LangGraph-based AI sales assistant.
+- Connecting the assistant to lead, property, and CRM tools.
+- Implementing follow-up scheduling through n8n.
+- Configuring timezone-aware scheduling.
+- Integrating the application with an external CRM service.
+- Implementing CRM contact lookup and synchronization.
+- Developing a human approval flow for follow-up emails.
+- Integrating Resend for email delivery.
+- Deploying the backend and automation services on Railway.
+- Testing and debugging the end-to-end integration between AI tools, webhooks, and backend APIs.
 
 ---
 
 ## Project Value
 
-FlowPilot demonstrates how a multi-stage business process can be transformed into a centralized, configurable software platform.
+Al Qaim Estate demonstrates how AI agents can be integrated into real business workflows.
 
-The project combines workflow automation, structured data management, configurable interfaces, quarterly performance tracking, notifications, and reporting in an end-to-end application.
+Instead of functioning only as a conversational interface, the AI assistant can use tools to retrieve business information and initiate controlled operations. LangGraph coordinates agent behavior, n8n orchestrates workflow steps, and FastAPI remains responsible for business logic and persistence.
 
-It demonstrates practical full-stack engineering across frontend development, API design, database modeling, workflow orchestration, and production deployment.
+The project demonstrates practical experience with full-stack engineering, LLM integration, agentic workflows, REST API design, CRM connectivity, and cloud-based automation.
 
 ## Project Status
 
-FlowPilot is an evolving performance review workflow automation platform. Its architecture supports continued development of evaluation components, workflow capabilities, reporting, and performance management features.
+Al Qaim Estate is an evolving AI sales automation prototype with a deployed backend, an online n8n workflow, an AI sales assistant, CRM integration, and tested follow-up scheduling.
+
+The scheduling workflow has been demonstrated end to end for a controlled test request. Further verification of scheduled email delivery, reliability, security, and failure handling remains necessary before describing the platform as a fully production-hardened sales automation system.
