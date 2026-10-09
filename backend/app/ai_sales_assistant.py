@@ -190,7 +190,7 @@ def trigger_n8n_workflow(lead_id: int, scheduled_at: str) -> dict:
     Schedule a lead follow-up through the n8n workflow.
     """
     print(f"AI → n8n: lead_id={lead_id}, scheduled_at={scheduled_at}")
-    url = "http://localhost:5678/webhook/al-qaim-agent"
+    url = "https://striking-inspiration-production-8d83.up.railway.app/webhook/al-qaim-agent"
 
     response = httpx.post(
         url,
