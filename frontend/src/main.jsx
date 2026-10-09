@@ -299,7 +299,7 @@ function AdminLogin() {
       <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
         <section className="form-card" style={{ width: '100%' }}>
           <div className="form-header">
-            <p className="form-kicker">HARBOURSTONE DEVELOPMENTS</p>
+            <p className="form-kicker">The email and password are pre-filled. Click below to access the Admin Dashboard.</p>
             <h2>Admin Login</h2>
           </div>
 
@@ -310,7 +310,7 @@ function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@example.com"
+                placeholder="rubyshaaz2013@gmail.com"
                 disabled={isSubmitting}
               />
             </label>
@@ -321,7 +321,7 @@ function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
+                placeholder="Zafar123"
                 disabled={isSubmitting}
               />
             </label>
