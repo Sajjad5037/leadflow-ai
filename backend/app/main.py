@@ -19,18 +19,31 @@ from app.api.crm import router as crm_router
 from app.api.ai_assistant import router as ai_assistant_router
 
 def test_resend_connection():
-    print("Testing connection to Resend...")
+    import os
+    import resend
+
+    print("Testing Resend SDK...")
+
+    api_key = os.getenv("RESEND_API_KEY")
+
+    if not api_key:
+        print("RESEND_API_KEY is missing!")
+        return
+
+    resend.api_key = api_key
 
     try:
-        response = httpx.get(
-            "https://api.resend.com",
-            timeout=15
-        )
+        response = resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": ["delivered@resend.dev"],
+            "subject": "Railway Resend Connection Test",
+            "text": "Testing Resend email integration from Railway.",
+        })
 
-        print("Resend connectivity status:", response.status_code)
+        print("Resend SDK response:", response)
 
     except Exception as exc:
-        print("Resend connectivity failed:", repr(exc))
+        print("Resend SDK failed:", type(exc).__name__, str(exc))
 
 app = FastAPI(title='LeadFlow AI API', version='0.1.0')
 
