@@ -24,13 +24,24 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     user = db.query(User).filter(User.email == form_data.username).first()
 
+    print(f"Login attempt for: {form_data.username}")
+    print(f"User found: {user is not None}")
+
     if not user:
+        print("Login failed: user not found")
         raise invalid_credentials_error
 
-    if not verify_password(form_data.password, user.password_hash):
+    password_valid = verify_password(form_data.password, user.password_hash)
+    print(f"Password valid: {password_valid}")
+
+    if not password_valid:
+        print("Login failed: incorrect password")
         raise invalid_credentials_error
+
+    print(f"User active: {user.is_active}")
 
     if not user.is_active:
+        print("Login failed: account inactive")
         raise invalid_credentials_error
 
     access_token = create_access_token({'sub': str(user.id)})

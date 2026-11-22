@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 #from apscheduler.schedulers.background import BackgroundScheduler
-
+import httpx
 from app.api.leads import router as leads_router
 from app.api.properties import router as properties_router
 from app.api.employees import router as employees_router
@@ -17,6 +17,20 @@ from app.models.employee import Employee
 from app.models.user import User
 from app.api.crm import router as crm_router
 from app.api.ai_assistant import router as ai_assistant_router
+
+def test_resend_connection():
+    print("Testing connection to Resend...")
+
+    try:
+        response = httpx.get(
+            "https://api.resend.com",
+            timeout=15
+        )
+
+        print("Resend connectivity status:", response.status_code)
+
+    except Exception as exc:
+        print("Resend connectivity failed:", repr(exc))
 
 app = FastAPI(title='LeadFlow AI API', version='0.1.0')
 
@@ -62,7 +76,9 @@ def health_check():
         'service': 'leadflow-ai-backend',
         'version': app.version,
     }
-
+@app.on_event("startup")
+def startup_event():
+    test_resend_connection()
 
 @app.get('/')
 def root():
