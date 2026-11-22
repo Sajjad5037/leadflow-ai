@@ -2045,6 +2045,7 @@ async function handleDeleteFollowup(followupId) {
                 <table className="lead-table">
                   <thead>
                     <tr>
+                      <th>Lead ID</th>
                       <th>Lead</th>
                       <th>Company</th>
                       <th>Score</th>
@@ -2076,6 +2077,7 @@ async function handleDeleteFollowup(followupId) {
                           className={selectedLead?.id === lead.id ? 'selected-lead-row' : ''}
                           onClick={() => setSelectedLead(lead)}
                         >
+                          <td>{lead.id}</td>
                           <td>{lead.name}</td>
                           <td>{lead.company}</td>
                           <td>{lead.qualification?.score ?? '—'}</td>
