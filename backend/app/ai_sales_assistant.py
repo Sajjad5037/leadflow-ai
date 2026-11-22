@@ -34,8 +34,12 @@ def get_lead_details(lead_id: int) -> dict:
     """
     Get detailed information about a lead from the Al Qaim API.
     """
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
 
-    url = f"http://localhost:8000/api/leads/{lead_id}"
+    url = f"{base_url}/api/leads/{lead_id}"
 
     response = httpx.get(url, timeout=10.0)
     response.raise_for_status()
@@ -79,8 +83,12 @@ def get_lead_crm_details(lead_id: int) -> dict:
     """
     Get a lead from Al Qaim and retrieve its corresponding CRM contact.
     """
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
 
-    lead_url = f"http://localhost:8000/api/leads/{lead_id}"
+    lead_url = f"{base_url}/api/leads/{lead_id}"
 
     lead_response = httpx.get(
         lead_url,
@@ -101,7 +109,7 @@ def get_lead_crm_details(lead_id: int) -> dict:
         }
 
     crm_url = (
-        f"https://al-qaim-crm-production.up.railway.app"
+        "https://al-qaim-crm-production.up.railway.app"
         f"/api/contacts/{crm_contact_id}"
     )
 
@@ -127,7 +135,12 @@ def get_sales_context(lead_id: int) -> dict:
     Get combined sales context for a lead, including the Al Qaim lead,
     its qualification, and the linked external CRM contact.
     """
-    lead_url = f"http://localhost:8000/api/leads/{lead_id}"
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
+
+    lead_url = f"{base_url}/api/leads/{lead_id}"
 
     lead_response = httpx.get(lead_url, timeout=10.0)
     lead_response.raise_for_status()
@@ -183,7 +196,6 @@ def get_sales_context(lead_id: int) -> dict:
         "crm_status": "LINKED",
         "inconsistencies": inconsistencies,
     }
-
 @tool
 def trigger_n8n_workflow(lead_id: int, scheduled_at: str) -> dict:
     """
@@ -209,13 +221,19 @@ def draft_followup(lead_id: int) -> dict:
     """
     Draft a follow-up email for a lead without sending it.
     """
-    url = f"http://localhost:8000/api/leads/{lead_id}"
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
+
+    url = f"{base_url}/api/leads/{lead_id}"
 
     response = httpx.get(url, timeout=10.0)
     response.raise_for_status()
 
     lead = response.json()
     qualification = lead["qualification"]
+
     email = generate_followup_email(
         name=lead["name"],
         company=lead["company"],
@@ -231,19 +249,23 @@ def draft_followup(lead_id: int) -> dict:
         "body": email["body"],
     }
 
+
 @tool
 def get_property_details(property_id: int) -> dict:
     """
     Get detailed information about a property from the Al Qaim API.
     """
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
 
-    url = f"http://localhost:8000/api/properties/{property_id}"
+    url = f"{base_url}/api/properties/{property_id}"
 
     response = httpx.get(url, timeout=10.0)
     response.raise_for_status()
 
     return response.json()
-
 
 @tool
 def search_properties(
@@ -270,7 +292,12 @@ def search_properties(
     """
     Search available Al Qaim Estate properties using optional criteria.
     """
-    url = "http://127.0.0.1:8000/api/properties/search"
+    base_url = os.getenv(
+        "INTERNAL_API_BASE_URL",
+        "http://localhost:8000"
+    ).rstrip("/")
+
+    url = f"{base_url}/api/properties/search"
 
     params = {}
 
@@ -295,7 +322,6 @@ def search_properties(
     response.raise_for_status()
 
     return response.json()
-
 
 
 llm = ChatOpenAI(
