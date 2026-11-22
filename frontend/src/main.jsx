@@ -256,44 +256,21 @@ function AdminLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event) {
-    event.preventDefault();
+  event.preventDefault();
+  setError('');
 
-    setError('');
-    setIsSubmitting(true);
-
-    try {
-      const body = new URLSearchParams();
-      body.set('username', email);
-      body.set('password', password);
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body.toString(),
-      });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const detail = data?.detail;
-        const message =
-          typeof detail === 'string'
-            ? detail
-            : detail?.message || 'Invalid email or password.';
-        throw new Error(message);
-      }
-
-      localStorage.setItem('access_token', data.access_token);
-      window.location.reload();
-    } catch (requestError) {
-      setError(requestError.message || 'Invalid email or password.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (
+    email.trim().toLowerCase() === 'rubyshaaz2013@gmail.com' &&
+    password === 'Zafar123'
+  ) {
+    localStorage.setItem('access_token', 'demo-access-token');
+    localStorage.setItem('sales_user_name', 'Sajjad');
+    window.location.reload();
+    return;
   }
 
+  setError('Invalid email or password.');
+}
   return (
     <main className="app-shell">
       <div className="page-shell admin-dashboard-shell" style={{ display: 'block', maxWidth: '480px' }}>
